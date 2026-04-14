@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Caloriq — Пресеты</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
+            green:  { DEFAULT: '#27AE60', bg: '#E8F5EE' },
+          },
+          fontFamily: {
+            anton:  ['Anton', 'sans-serif'],
+            roboto: ['Roboto', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    @keyframes up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { animation: up 0.3s 0.05s both; }
+    .anim-2 { animation: up 0.3s 0.12s both; }
+    .anim-3 { animation: up 0.3s 0.18s both; }
+
+    /* Preset item actions */
+    .preset-actions {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.25s ease, opacity 0.2s ease;
+      opacity: 0;
+    }
+    .preset-item.open .preset-actions { max-height: 80px; opacity: 1; }
+    .preset-item .chevron { transition: transform 0.22s ease; }
+    .preset-item.open .chevron { transform: rotate(180deg); }
+
+    .tabs-scroll { scrollbar-width: none; }
+    .tabs-scroll::-webkit-scrollbar { display: none; }
+
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Emoji grid */
+    .emoji-grid { scrollbar-width: thin; scrollbar-color: #E0E0DC transparent; }
+    .emoji-grid::-webkit-scrollbar { width: 4px; }
+    .emoji-grid::-webkit-scrollbar-thumb { background: #E0E0DC; border-radius: 4px; }
+    .emoji-btn { transition: transform 0.12s, background 0.12s; }
+    .emoji-btn:active { transform: scale(0.85); }
+    .emoji-btn.selected { background: #FEF0EA; outline: 2px solid #F55E1E; }
+
+    /* Photo preview */
+    .photo-preview { object-fit: cover; width: 100%; height: 100%; border-radius: 14px; }
+  </style>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#F55E1E"/>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");</script>
+</head>
+<body class="bg-[#F7F7F5] font-roboto select-none overflow-hidden h-dvh">
+
+<div class="flex flex-col h-dvh max-w-lg mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between px-6 pt-[env(safe-area-inset-top,52px)] pb-4 anim-1">
+    <div>
+      <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85]">Управление</p>
+      <p class="font-anton text-[28px] text-[#18180F] leading-tight">Пресеты</p>
+    </div>
+    <button onclick="openModal(null)"
+      class="h-10 px-4 rounded-full bg-orange text-white font-roboto text-[13px] font-medium flex items-center gap-2 active:scale-95 transition-transform">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Добавить
+    </button>
+  </div>
+
+  <!-- Category filter tabs -->
+  <div class="tabs-scroll flex gap-1 px-6 mb-3 overflow-x-auto anim-2" data-js="tabs">
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-orange bg-orange-bg transition-colors duration-150"
+      data-tab="all" onclick="switchTab(this)">Все</button>
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+      data-tab="breakfast" onclick="switchTab(this)">Завтрак</button>
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+      data-tab="lunch" onclick="switchTab(this)">Обед</button>
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+      data-tab="dinner" onclick="switchTab(this)">Ужин</button>
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+      data-tab="snack" onclick="switchTab(this)">Перекус</button>
+    <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+      data-tab="drinks" onclick="switchTab(this)">Напитки</button>
+  </div>
+
+  <!-- Tab hint (always visible) -->
+  <div data-js="tab-hint" class="mx-6 mb-4 bg-orange-bg rounded-2xl px-4 py-3 flex items-start gap-3 anim-2">
+    <span class="text-[18px] shrink-0 mt-0.5">💡</span>
+    <p data-js="hint-text" class="font-roboto text-[13px] text-orange font-light leading-snug"></p>
+  </div>
+
+  <!-- Preset list -->
+  <div class="flex-1 overflow-y-auto px-6 pb-4 anim-3">
+    <div data-js="preset-list" class="flex flex-col gap-3"></div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <div class="flex border-t border-[#EEEEED] bg-white pb-[env(safe-area-inset-bottom,16px)] shrink-0">
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='index.html'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+      <span class="text-[10px] font-medium">Главная</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-orange">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/>
+      </svg>
+      <span class="text-[10px] font-medium">Пресеты</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='history.html'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="text-[10px] font-medium">История</span>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     ADD / EDIT MODAL
+════════════════════════════════ -->
+<div data-js="modal" class="hidden fixed inset-0 z-40">
+  <div class="absolute inset-0 bg-black/30" style="backdrop-filter:blur(4px)" onclick="closeModal()"></div>
+  <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-[28px] px-6 pt-5 pb-[env(safe-area-inset-bottom,24px)]">
+    <div class="w-10 h-1 rounded-full bg-[#E0E0DC] mx-auto mb-5"></div>
+    <h2 data-js="modal-title" class="font-anton text-[24px] text-[#18180F] mb-5">Новый пресет</h2>
+
+    <!-- Photo / Emoji + name row -->
+    <div class="flex items-center gap-3 mb-4">
+
+      <!-- Preview box: shows photo or emoji, tap to choose -->
+      <div class="relative w-14 h-14 shrink-0">
+        <!-- Hidden file input -->
+        <input data-js="photo-input" type="file" accept="image/*" class="hidden" onchange="onPhotoSelected(event)"/>
+
+        <!-- Preview (photo or emoji) -->
+        <div data-js="preview-box"
+          class="w-14 h-14 rounded-2xl bg-orange-bg flex items-center justify-center text-[28px] overflow-hidden cursor-pointer border-2 border-transparent hover:border-orange transition-colors active:scale-95"
+          onclick="openMediaChoice()">
+          <span data-js="preview-emoji">🍽️</span>
+          <img data-js="preview-photo" class="photo-preview hidden" alt=""/>
+        </div>
+
+        <!-- Small badge hint -->
+        <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-orange flex items-center justify-center pointer-events-none">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </div>
+      </div>
+
+      <input data-js="modal-name" type="text" placeholder="Название пресета"
+        class="flex-1 h-14 rounded-2xl border-2 border-[#E8E8E3] px-4 font-roboto text-[15px] text-[#18180F] placeholder:text-[#CCCCC8] focus:outline-none focus:border-orange transition-colors"/>
+    </div>
+
+    <!-- Media choice sheet (emoji vs photo) -->
+    <div data-js="media-choice" class="hidden mb-4 bg-[#F7F7F5] rounded-2xl overflow-hidden">
+      <button onclick="triggerPhoto()"
+        class="w-full px-4 py-3 flex items-center gap-3 text-left active:bg-[#EFEFED] transition-colors border-b border-[#EEEEED]">
+        <span class="text-[20px]">📷</span>
+        <span class="font-roboto text-[14px] font-medium text-[#18180F]">Сделать фото / выбрать из галереи</span>
+      </button>
+      <button onclick="openEmojiPicker()"
+        class="w-full px-4 py-3 flex items-center gap-3 text-left active:bg-[#EFEFED] transition-colors">
+        <span class="text-[20px]">😊</span>
+        <span class="font-roboto text-[14px] font-medium text-[#18180F]">Выбрать эмодзи</span>
+      </button>
+    </div>
+
+    <!-- Calories -->
+    <div class="flex items-center gap-3 mb-4">
+      <input data-js="modal-calories" type="number" placeholder="0"
+        class="flex-1 h-14 rounded-2xl border-2 border-[#E8E8E3] px-4 font-anton text-[26px] text-[#18180F] placeholder:text-[#CCCCC8] focus:outline-none focus:border-orange transition-colors"/>
+      <span class="font-roboto text-[14px] text-[#8C8C85] font-light shrink-0">ккал</span>
+    </div>
+
+    <!-- Category -->
+    <div class="flex gap-2 flex-wrap mb-6">
+      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all active:scale-95"
+        data-cat="breakfast" onclick="pickCat(this)">Завтрак</button>
+      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all active:scale-95"
+        data-cat="lunch" onclick="pickCat(this)">Обед</button>
+      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all active:scale-95"
+        data-cat="dinner" onclick="pickCat(this)">Ужин</button>
+      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all active:scale-95"
+        data-cat="snack" onclick="pickCat(this)">Перекус</button>
+      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all active:scale-95"
+        data-cat="drinks" onclick="pickCat(this)">Напитки</button>
+    </div>
+
+    <button data-js="modal-save" disabled onclick="savePreset()"
+      class="w-full h-14 rounded-2xl bg-orange font-anton text-lg tracking-wide text-white flex items-center justify-center transition-all active:scale-[0.97] disabled:bg-[#E8E8E3] disabled:text-[#BBBBB5] disabled:cursor-not-allowed">
+      Сохранить
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     EMOJI PICKER
+════════════════════════════════ -->
+<div data-js="emoji-modal" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-black/40" onclick="closeEmojiPicker()"></div>
+  <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-[28px] pt-5 pb-[env(safe-area-inset-bottom,24px)]"
+    style="max-height:70dvh;display:flex;flex-direction:column;">
+    <div class="w-10 h-1 rounded-full bg-[#E0E0DC] mx-auto mb-4 shrink-0"></div>
+    <p class="font-anton text-[20px] text-[#18180F] px-6 mb-4 shrink-0">Выбери иконку</p>
+    <div data-js="emoji-grid" class="emoji-grid overflow-y-auto px-6 pb-4 grid grid-cols-7 gap-2"></div>
+  </div>
+</div>
+
+<script>
+  // ── Food emojis ────────────────────────────────────────────────
+  const FOOD_EMOJIS = [
+    '🍎','🍊','🍋','🍇','🍓','🫐','🍌','🍉','🍑','🥭','🍍','🥥','🥝','🍅',
+    '🥑','🥦','🥬','🥒','🌽','🥕','🧅','🥔','🍠',
+    '🥚','🍳','🥩','🍗','🐟','🦐','🧀',
+    '🍞','🥐','🥖','🧇','🥞','🍚','🍜','🍝','🥙','🌮','🌯',
+    '🍱','🥗','🍛','🍲','🫕','🥘','🍔','🍟','🍕','🌭','🫔',
+    '🍫','🍪','🍩','🍰','🎂','🧁','🍮','🍯','🥜','🌰','🍿',
+    '🥛','🧈','🫙','☕','🫖','🍵','🧃','🥤','🧋','🍷','🍺','💧',
+    '🍽️','🥄','🍴',
+  ];
+
+  // ── Tab hints ──────────────────────────────────────────────────
+  const TAB_HINTS = {
+    all:       'Здесь все твои пресеты. Добавляй еду которую ешь регулярно — и логирование займёт секунды.',
+    breakfast: 'Добавь сюда всё что обычно ешь на завтрак: йогурт, яйца, кашу, кофе. Однажды настроишь — каждое утро в два тапа.',
+    lunch:     'Добавь свои типичные обеды: домашний суп, бизнес-ланч, любимый салат. Чем точнее — тем честнее счёт.',
+    dinner:    'Ужин у большинства самый стабильный приём пищи. Добавь 3–5 вариантов и ты закроешь 90% случаев.',
+    snack:     'Перекусы — главный источник "незамеченных" калорий. Орехи, фрукты, батончики — добавь их сюда.',
+    drinks:    'Не забывай про напитки: сок, кола, кофе с молоком — это тоже калории. Добавь свои частые варианты.',
+  };
+
+  const CAT_LABELS = {
+    breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин',
+    snack: 'Перекус', drinks: 'Напитки',
+  };
+
+  // ── State ──────────────────────────────────────────────────────
+  let presets       = JSON.parse(localStorage.getItem('presets') || '[]');
+  let activeTab     = 'all';
+  let editIdx       = null;
+  let selectedEmoji = '🍽️';
+  let selectedPhoto = null;  // base64 string or null
+  let modalCat      = 'breakfast';
+
+  // ── DOM refs ───────────────────────────────────────────────────
+  const presetList    = document.querySelector('[data-js="preset-list"]');
+  const hintText      = document.querySelector('[data-js="hint-text"]');
+  const modal         = document.querySelector('[data-js="modal"]');
+  const modalTitle    = document.querySelector('[data-js="modal-title"]');
+  const modalName     = document.querySelector('[data-js="modal-name"]');
+  const modalCalories = document.querySelector('[data-js="modal-calories"]');
+  const modalSave     = document.querySelector('[data-js="modal-save"]');
+  const mediaChoice   = document.querySelector('[data-js="media-choice"]');
+  const photoInput    = document.querySelector('[data-js="photo-input"]');
+  const previewBox    = document.querySelector('[data-js="preview-box"]');
+  const previewEmoji  = document.querySelector('[data-js="preview-emoji"]');
+  const previewPhoto  = document.querySelector('[data-js="preview-photo"]');
+  const emojiModal    = document.querySelector('[data-js="emoji-modal"]');
+  const emojiGrid     = document.querySelector('[data-js="emoji-grid"]');
+
+  // ── Render list ────────────────────────────────────────────────
+  function renderList() {
+    // Update hint
+    hintText.textContent = TAB_HINTS[activeTab];
+
+    presetList.innerHTML = '';
+    const filtered = activeTab === 'all'
+      ? presets
+      : presets.filter(p => p.cat === activeTab);
+
+    if (filtered.length === 0) {
+      presetList.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-12 gap-3">
+          <span class="text-[48px]">🍽️</span>
+          <p class="font-roboto text-[14px] text-[#8C8C85] font-light text-center leading-relaxed">
+            ${activeTab === 'all'
+              ? 'Пресетов пока нет.<br/>Нажми <b>Добавить</b> чтобы начать.'
+              : `Нет пресетов для «${CAT_LABELS[activeTab]}»`}
+          </p>
+        </div>`;
+      return;
+    }
+
+    filtered.forEach(p => {
+      const realIdx = presets.indexOf(p);
+
+      // Thumbnail: photo or emoji
+      const thumb = p.photo
+        ? `<img src="${p.photo}" alt="" class="w-full h-full object-cover rounded-[12px]"/>`
+        : `<span class="text-[24px]">${p.emoji || '🍽️'}</span>`;
+
+      const item = document.createElement('div');
+      item.className = 'preset-item bg-white rounded-[18px] overflow-hidden';
+      item.dataset.idx = realIdx;
+      item.innerHTML = `
+        <button class="w-full px-4 py-4 flex items-center gap-3 text-left active:bg-[#FAFAF8] transition-colors"
+          onclick="toggleItem(${realIdx})">
+          <div class="w-12 h-12 rounded-[12px] bg-orange-bg flex items-center justify-center overflow-hidden shrink-0">
+            ${thumb}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-roboto text-[15px] font-medium text-[#18180F] truncate">${p.name}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="font-anton text-[14px] text-orange">${p.kcal} ккал</span>
+              <span class="text-[11px] text-[#CCCCC8]">·</span>
+              <span class="text-[12px] text-[#8C8C85] font-light">${CAT_LABELS[p.cat] || ''}</span>
+            </div>
+          </div>
+          <svg class="chevron w-4 h-4 text-[#CCCCC8] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6,9 12,15 18,9"/>
+          </svg>
+        </button>
+        <div class="preset-actions px-4">
+          <div class="flex gap-2 pb-4">
+            <button onclick="openModal(${realIdx})"
+              class="flex-1 h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#18180F] flex items-center justify-center gap-2 active:scale-95 transition-transform">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              Редактировать
+            </button>
+            <button onclick="deletePreset(${realIdx})"
+              class="flex-1 h-10 rounded-xl border-2 border-red-100 bg-red-50 font-roboto text-[13px] font-medium text-red-400 flex items-center justify-center gap-2 active:scale-95 transition-transform">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/>
+                <path d="M10,11v6"/><path d="M14,11v6"/>
+              </svg>
+              Удалить
+            </button>
+          </div>
+        </div>`;
+      presetList.appendChild(item);
+    });
+  }
+
+  // ── Toggle item ────────────────────────────────────────────────
+  function toggleItem(idx) {
+    const item = document.querySelector(`[data-idx="${idx}"]`);
+    const wasOpen = item.classList.contains('open');
+    document.querySelectorAll('.preset-item.open').forEach(el => el.classList.remove('open'));
+    if (!wasOpen) item.classList.add('open');
+  }
+
+  // ── Delete ─────────────────────────────────────────────────────
+  function deletePreset(idx) {
+    if (!confirm(`Удалить пресет «${presets[idx].name}»?`)) return;
+    presets.splice(idx, 1);
+    savePresets();
+    renderList();
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  // ── Tabs ───────────────────────────────────────────────────────
+  function switchTab(btn) {
+    document.querySelectorAll('[data-js="tabs"] .tab').forEach(t => {
+      t.classList.remove('text-orange', 'bg-orange-bg');
+      t.classList.add('text-[#8C8C85]');
+    });
+    btn.classList.remove('text-[#8C8C85]');
+    btn.classList.add('text-orange', 'bg-orange-bg');
+    activeTab = btn.dataset.tab;
+    renderList();
+  }
+
+  // ── Modal open/close ───────────────────────────────────────────
+  function openModal(idx) {
+    editIdx = idx;
+    const isEdit = idx !== null;
+    modalTitle.textContent = isEdit ? 'Редактировать' : 'Новый пресет';
+    mediaChoice.classList.add('hidden');
+    emojiGrid.innerHTML = '';
+
+    if (isEdit) {
+      const p = presets[idx];
+      selectedEmoji = p.emoji || '🍽️';
+      selectedPhoto = p.photo || null;
+      modalName.value     = p.name;
+      modalCalories.value = p.kcal;
+      modalCat            = p.cat;
+      modalSave.disabled  = false;
+    } else {
+      selectedEmoji = '🍽️';
+      selectedPhoto = null;
+      modalName.value     = '';
+      modalCalories.value = '';
+      modalCat            = 'breakfast';
+      modalSave.disabled  = true;
+    }
+
+    updatePreview();
+    setActiveCat(modalCat);
+    modal.classList.remove('hidden');
+  }
+
+  function closeModal() {
+    modal.classList.add('hidden');
+    mediaChoice.classList.add('hidden');
+  }
+
+  // ── Preview update ─────────────────────────────────────────────
+  function updatePreview() {
+    if (selectedPhoto) {
+      previewPhoto.src = selectedPhoto;
+      previewPhoto.classList.remove('hidden');
+      previewEmoji.classList.add('hidden');
+    } else {
+      previewEmoji.textContent = selectedEmoji;
+      previewEmoji.classList.remove('hidden');
+      previewPhoto.classList.add('hidden');
+    }
+  }
+
+  // ── Media choice ───────────────────────────────────────────────
+  function openMediaChoice() {
+    mediaChoice.classList.toggle('hidden');
+  }
+
+  function triggerPhoto() {
+    mediaChoice.classList.add('hidden');
+    photoInput.click();
+  }
+
+  /**
+   * Handle photo file selection — convert to base64 for localStorage
+   * @param {Event} e
+   */
+  function onPhotoSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Resize to max 400px to keep localStorage usage reasonable
+    const reader = new FileReader();
+    reader.onload = evt => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 400;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        selectedPhoto = canvas.toDataURL('image/jpeg', 0.75);
+        selectedEmoji = '🍽️'; // reset emoji when photo set
+        updatePreview();
+        validateModal();
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  }
+
+  // ── Emoji picker ───────────────────────────────────────────────
+  function openEmojiPicker() {
+    mediaChoice.classList.add('hidden');
+    if (emojiGrid.children.length === 0) {
+      FOOD_EMOJIS.forEach(em => {
+        const btn = document.createElement('button');
+        btn.className = 'emoji-btn w-10 h-10 rounded-xl text-[24px] flex items-center justify-center';
+        btn.textContent = em;
+        if (em === selectedEmoji && !selectedPhoto) btn.classList.add('selected');
+        btn.onclick = () => pickEmoji(em, btn);
+        emojiGrid.appendChild(btn);
+      });
+    } else {
+      emojiGrid.querySelectorAll('.emoji-btn').forEach(b =>
+        b.classList.toggle('selected', b.textContent === selectedEmoji && !selectedPhoto));
+    }
+    emojiModal.classList.remove('hidden');
+  }
+
+  function closeEmojiPicker() { emojiModal.classList.add('hidden'); }
+
+  function pickEmoji(em, btn) {
+    selectedEmoji = em;
+    selectedPhoto = null; // clear photo when emoji chosen
+    emojiGrid.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    updatePreview();
+    if (navigator.vibrate) navigator.vibrate(8);
+    setTimeout(closeEmojiPicker, 150);
+  }
+
+  // ── Category ───────────────────────────────────────────────────
+  function setActiveCat(cat) {
+    document.querySelectorAll('.cat-btn').forEach(b => {
+      const active = b.dataset.cat === cat;
+      b.classList.toggle('border-orange', active);
+      b.classList.toggle('bg-orange-bg',  active);
+      b.classList.toggle('text-orange',   active);
+      b.classList.toggle('border-[#E8E8E3]', !active);
+      b.classList.toggle('text-[#8C8C85]',   !active);
+    });
+  }
+
+  function pickCat(btn) {
+    modalCat = btn.dataset.cat;
+    setActiveCat(modalCat);
+  }
+
+  function validateModal() {
+    const hasName = modalName.value.trim().length > 0;
+    const kcal    = parseInt(modalCalories.value);
+    modalSave.disabled = !(hasName && kcal > 0);
+  }
+
+  modalName.addEventListener('input', validateModal);
+  modalCalories.addEventListener('input', validateModal);
+
+  // ── Save preset ────────────────────────────────────────────────
+  function savePreset() {
+    const name = modalName.value.trim();
+    const kcal = parseInt(modalCalories.value);
+    if (!name || !kcal) return;
+
+    const preset = {
+      name,
+      kcal,
+      cat:   modalCat,
+      emoji: selectedEmoji,
+      photo: selectedPhoto || null,  // base64 or null
+    };
+
+    if (editIdx !== null) {
+      presets[editIdx] = preset;
+    } else {
+      presets.push(preset);
+    }
+
+    savePresets();
+    closeModal();
+    renderList();
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  function savePresets() { localStorage.setItem('presets', JSON.stringify(presets)); }
+
+  // ── Init ───────────────────────────────────────────────────────
+  renderList();
+</script>
+</body>
+</html>

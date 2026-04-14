@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Caloriq — История</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
+            green:  { DEFAULT: '#27AE60', bg: '#E8F5EE' },
+          },
+          fontFamily: {
+            anton:  ['Anton', 'sans-serif'],
+            roboto: ['Roboto', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    @keyframes up {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { animation: up 0.3s 0.05s both; }
+    .anim-2 { animation: up 0.3s 0.12s both; }
+    .anim-3 { animation: up 0.3s 0.18s both; }
+
+    /* Day detail slide down */
+    @keyframes slideDown {
+      from { opacity: 0; max-height: 0; }
+      to   { opacity: 1; max-height: 600px; }
+    }
+    .slide-down { animation: slideDown 0.28s ease both; overflow: hidden; }
+
+    /* Log item delete reveal */
+    .log-entry .del-btn {
+      opacity: 0; transform: scale(0.7); pointer-events: none;
+      transition: opacity 0.18s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .log-entry.show-del .del-btn { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+    .tabs-scroll { scrollbar-width: none; }
+    .tabs-scroll::-webkit-scrollbar { display: none; }
+
+    /* Bar fill */
+    .bar-fill { transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+  </style>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#F55E1E"/>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");</script>
+</head>
+<body class="bg-[#F7F7F5] font-roboto select-none overflow-hidden h-dvh">
+
+<div class="flex flex-col h-dvh max-w-lg mx-auto">
+
+  <!-- Header -->
+  <div class="px-6 pt-[env(safe-area-inset-top,52px)] pb-4 anim-1">
+    <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85]">Обзор</p>
+    <p class="font-anton text-[28px] text-[#18180F] leading-tight">История</p>
+  </div>
+
+  <!-- Summary card -->
+  <div data-js="summary-card" class="mx-6 bg-white rounded-[22px] p-5 mb-4 anim-2">
+    <div class="flex gap-4">
+      <div class="flex-1 text-center">
+        <p class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1">Дней подряд</p>
+        <p data-js="stat-streak" class="font-anton text-[28px] text-orange leading-none">0</p>
+      </div>
+      <div class="w-px bg-[#F0F0ED]"></div>
+      <div class="flex-1 text-center">
+        <p class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1">В норме</p>
+        <p data-js="stat-ok" class="font-anton text-[28px] text-green leading-none">0</p>
+      </div>
+      <div class="w-px bg-[#F0F0ED]"></div>
+      <div class="flex-1 text-center">
+        <p class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1">Перебор</p>
+        <p data-js="stat-over" class="font-anton text-[28px] text-red-400 leading-none">0</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Period filter tabs -->
+  <div class="tabs-scroll flex gap-2 px-6 mb-4 anim-3">
+    <button class="period-tab flex-1 h-9 rounded-full font-roboto text-[13px] font-medium text-orange bg-orange-bg transition-colors duration-150"
+      data-period="days" onclick="switchPeriod(this)">Дни</button>
+    <button class="period-tab flex-1 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] bg-white transition-colors duration-150"
+      data-period="weeks" onclick="switchPeriod(this)">Недели</button>
+    <button class="period-tab flex-1 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] bg-white transition-colors duration-150"
+      data-period="months" onclick="switchPeriod(this)">Месяцы</button>
+  </div>
+
+  <!-- List -->
+  <div class="flex-1 overflow-y-auto px-6 pb-4">
+    <div data-js="history-list" class="flex flex-col gap-3"></div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <div class="flex border-t border-[#EEEEED] bg-white pb-[env(safe-area-inset-bottom,16px)] shrink-0">
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='index.html'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
+      </svg>
+      <span class="text-[10px] font-medium">Главная</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='presets.html'">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/>
+      </svg>
+      <span class="text-[10px] font-medium">Пресеты</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-orange">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span class="text-[10px] font-medium">История</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────────
+  const DAILY = parseInt(localStorage.getItem('calories')) || 2000;
+
+  /** Get all log keys sorted desc: ['logs_2026-04-14', ...] */
+  function getAllLogKeys() {
+    return Object.keys(localStorage)
+      .filter(k => k.startsWith('logs_'))
+      .sort()
+      .reverse();
+  }
+
+  /** Parse logs_YYYY-MM-DD → { date, logs[], eaten, delta } */
+  function parseDay(key) {
+    const date = key.replace('logs_', '');
+    const logs = JSON.parse(localStorage.getItem(key) || '[]');
+    const eaten = logs.reduce((s, l) => s + l.kcal, 0);
+    return { date, logs, eaten, delta: eaten - DAILY };
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+  }
+
+  function formatWeek(dateStr) {
+    const d   = new Date(dateStr + 'T00:00:00');
+    const end = new Date(d);
+    end.setDate(d.getDate() + 6);
+    const fmt = { day: 'numeric', month: 'short' };
+    return d.toLocaleDateString('ru-RU', fmt) + ' — ' + end.toLocaleDateString('ru-RU', fmt);
+  }
+
+  function formatMonth(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' });
+  }
+
+  /** Monday of the week containing dateStr */
+  function weekKey(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const day = d.getDay() === 0 ? 7 : d.getDay();
+    d.setDate(d.getDate() - (day - 1));
+    return d.toISOString().slice(0, 10);
+  }
+
+  /** YYYY-MM key */
+  function monthKey(dateStr) { return dateStr.slice(0, 7); }
+
+  // ── Stats ────────────────────────────────────────────────────
+  function updateStats(days) {
+    let okCount   = 0;
+    let overCount = 0;
+    let streak    = 0;
+    let streakBroken = false;
+
+    // streak = consecutive days from today going back with data
+    const today = new Date().toISOString().slice(0, 10);
+
+    days.forEach((d, i) => {
+      if (d.eaten > 0) {
+        if (d.delta <= 0) okCount++;
+        else overCount++;
+      }
+    });
+
+    // Calculate streak (consecutive days with logs going back from today)
+    const sortedDays = [...days].sort((a, b) => b.date.localeCompare(a.date));
+    let expected = today;
+    for (const d of sortedDays) {
+      if (d.date === expected && d.eaten > 0) {
+        streak++;
+        const dt = new Date(expected + 'T00:00:00');
+        dt.setDate(dt.getDate() - 1);
+        expected = dt.toISOString().slice(0, 10);
+      } else { break; }
+    }
+
+    document.querySelector('[data-js="stat-streak"]').textContent = streak;
+    document.querySelector('[data-js="stat-ok"]').textContent     = okCount;
+    document.querySelector('[data-js="stat-over"]').textContent   = overCount;
+  }
+
+  // ── Render ───────────────────────────────────────────────────
+  let activePeriod = 'days';
+  let openRowKey   = null; // currently expanded row
+
+  function render() {
+    const list = document.querySelector('[data-js="history-list"]');
+    list.innerHTML = '';
+
+    const keys = getAllLogKeys();
+    if (keys.length === 0) {
+      list.innerHTML = `<p class="text-center text-[14px] text-[#8C8C85] font-light mt-10">Пока нет данных.<br/>Начни логировать на главной!</p>`;
+      return;
+    }
+
+    const days = keys.map(parseDay);
+    updateStats(days);
+
+    if (activePeriod === 'days')   renderDays(list, days);
+    if (activePeriod === 'weeks')  renderWeeks(list, days);
+    if (activePeriod === 'months') renderMonths(list, days);
+  }
+
+  // ── Days view ────────────────────────────────────────────────
+  function renderDays(list, days) {
+    const maxEaten = Math.max(...days.map(d => d.eaten), DAILY);
+
+    days.forEach(day => {
+      if (day.eaten === 0) return; // skip empty days
+
+      const row = buildRow({
+        key:       day.date,
+        label:     formatDate(day.date),
+        eaten:     day.eaten,
+        delta:     day.delta,
+        maxEaten,
+        expandable: true,
+        onExpand:  () => renderDayDetail(day),
+      });
+      list.appendChild(row);
+    });
+  }
+
+  // ── Weeks view ───────────────────────────────────────────────
+  function renderWeeks(list, days) {
+    const map = {};
+    days.forEach(d => {
+      const wk = weekKey(d.date);
+      if (!map[wk]) map[wk] = { eaten: 0, count: 0, days: [] };
+      map[wk].eaten += d.eaten;
+      map[wk].count++;
+      map[wk].days.push(d);
+    });
+
+    const sorted = Object.keys(map).sort().reverse();
+    const maxEaten = Math.max(...sorted.map(k => map[k].eaten), DAILY * 7);
+
+    sorted.forEach(wk => {
+      const g = map[wk];
+      const avgEaten = Math.round(g.eaten / Math.max(g.count, 1));
+      const delta    = g.eaten - DAILY * g.count;
+
+      const row = buildRow({
+        key:        wk,
+        label:      formatWeek(wk),
+        eaten:      g.eaten,
+        delta,
+        maxEaten,
+        sublabel:   `${g.count} дн. · среднее ${avgEaten.toLocaleString('ru')} ккал/день`,
+        expandable: true,
+        onExpand:   () => renderWeekDetail(g.days),
+      });
+      list.appendChild(row);
+    });
+  }
+
+  // ── Months view ──────────────────────────────────────────────
+  function renderMonths(list, days) {
+    const map = {};
+    days.forEach(d => {
+      const mk = monthKey(d.date);
+      if (!map[mk]) map[mk] = { eaten: 0, count: 0, days: [] };
+      map[mk].eaten += d.eaten;
+      map[mk].count++;
+      map[mk].days.push(d);
+    });
+
+    const sorted = Object.keys(map).sort().reverse();
+    const maxEaten = Math.max(...sorted.map(k => map[k].eaten), DAILY * 30);
+
+    sorted.forEach(mk => {
+      const g = map[mk];
+      const avgEaten = Math.round(g.eaten / Math.max(g.count, 1));
+      const delta    = g.eaten - DAILY * g.count;
+
+      const row = buildRow({
+        key:        mk,
+        label:      formatMonth(mk + '-01'),
+        eaten:      g.eaten,
+        delta,
+        maxEaten,
+        sublabel:   `${g.count} дн. · среднее ${avgEaten.toLocaleString('ru')} ккал/день`,
+        expandable: true,
+        onExpand:   () => renderWeekDetail(g.days),
+      });
+      list.appendChild(row);
+    });
+  }
+
+  // ── Row builder ──────────────────────────────────────────────
+  function buildRow({ key, label, eaten, delta, maxEaten, sublabel, expandable, onExpand }) {
+    const isOver    = delta > 0;
+    const deltaText = (isOver ? '+' : '') + delta.toLocaleString('ru') + ' ккал';
+    const deltaColor = isOver ? 'text-red-400' : 'text-green';
+    const barPct    = Math.min(100, Math.round((eaten / maxEaten) * 100));
+    const barColor  = isOver ? 'bg-red-300' : 'bg-green';
+    const icon      = isOver ? '🔴' : '✅';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bg-white rounded-[18px] overflow-hidden';
+    wrap.dataset.rowKey = key;
+
+    wrap.innerHTML = `
+      <button class="w-full px-4 py-4 flex items-center gap-3 text-left active:bg-[#FAFAF8] transition-colors"
+        onclick="toggleRow('${key}')">
+        <span class="text-[18px] shrink-0">${icon}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-roboto text-[14px] font-medium text-[#18180F] truncate">${label}</p>
+          ${sublabel ? `<p class="text-[12px] text-[#8C8C85] font-light">${sublabel}</p>` : ''}
+          <!-- Mini bar -->
+          <div class="h-1.5 bg-[#F0F0ED] rounded-full mt-2 overflow-hidden">
+            <div class="bar-fill h-full rounded-full ${barColor}" style="width:${barPct}%"></div>
+          </div>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="font-anton text-[16px] text-[#18180F]">${eaten.toLocaleString('ru')}</p>
+          <p class="font-roboto text-[12px] font-medium ${deltaColor}">${deltaText}</p>
+        </div>
+        ${expandable ? `
+        <svg data-chevron="${key}" class="w-4 h-4 shrink-0 text-[#CCCCC8] transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>` : ''}
+      </button>
+      <div data-detail="${key}" class="hidden px-4 pb-4"></div>`;
+
+    // Store expand callback
+    wrap._onExpand = onExpand;
+    return wrap;
+  }
+
+  // ── Toggle row expand ─────────────────────────────────────────
+  function toggleRow(key) {
+    const wrap   = document.querySelector(`[data-row-key="${key}"]`);
+    const detail = document.querySelector(`[data-detail="${key}"]`);
+    const chev   = document.querySelector(`[data-chevron="${key}"]`);
+    if (!wrap) return;
+
+    const isOpen = !detail.classList.contains('hidden');
+
+    // Close all
+    document.querySelectorAll('[data-detail]').forEach(d => d.classList.add('hidden'));
+    document.querySelectorAll('[data-chevron]').forEach(c => c.style.transform = '');
+
+    if (!isOpen) {
+      detail.classList.remove('hidden');
+      detail.classList.add('slide-down');
+      if (chev) chev.style.transform = 'rotate(180deg)';
+      detail.innerHTML = '';
+      const content = wrap._onExpand();
+      if (content) detail.appendChild(content);
+    }
+  }
+
+  // ── Day detail ───────────────────────────────────────────────
+  function renderDayDetail(day) {
+    if (day.logs.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'text-[13px] text-[#8C8C85] font-light py-2';
+      empty.textContent = 'Нет записей';
+      return empty;
+    }
+
+    const frag = document.createDocumentFragment();
+    const divider = document.createElement('div');
+    divider.className = 'h-px bg-[#F0F0ED] mb-3';
+    frag.appendChild(divider);
+
+    [...day.logs].reverse().forEach((entry, revIdx) => {
+      const realIdx = day.logs.length - 1 - revIdx;
+      const item = document.createElement('div');
+      item.className = 'log-entry flex items-center gap-3 py-2 cursor-pointer';
+      item.onclick = () => toggleEntryDelete(item);
+      item.innerHTML = `
+        <span class="text-[20px] shrink-0">${entry.emoji || '🍽️'}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-roboto text-[13px] font-medium text-[#18180F] truncate">${entry.name}</p>
+          <p class="font-roboto text-[11px] text-[#8C8C85] font-light">${formatTime(entry.time)}</p>
+        </div>
+        <span class="font-anton text-[14px] text-orange shrink-0">${entry.kcal} ккал</span>
+        <button class="del-btn w-7 h-7 rounded-full bg-red-50 flex items-center justify-center shrink-0"
+          onclick="deleteEntry(event, '${day.date}', ${realIdx})">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/>
+            <path d="M10,11v6"/><path d="M14,11v6"/>
+          </svg>
+        </button>`;
+      frag.appendChild(item);
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(frag);
+    return wrapper;
+  }
+
+  // ── Week/month detail (list of days) ─────────────────────────
+  function renderWeekDetail(days) {
+    const frag = document.createDocumentFragment();
+    const divider = document.createElement('div');
+    divider.className = 'h-px bg-[#F0F0ED] mb-3';
+    frag.appendChild(divider);
+
+    const sorted = [...days].sort((a, b) => b.date.localeCompare(a.date));
+    sorted.forEach(day => {
+      if (day.eaten === 0) return;
+      const isOver = day.delta > 0;
+      const item = document.createElement('div');
+      item.className = 'flex items-center gap-3 py-2';
+      item.innerHTML = `
+        <span class="text-[16px]">${isOver ? '🔴' : '✅'}</span>
+        <div class="flex-1">
+          <p class="font-roboto text-[13px] font-medium text-[#18180F]">${formatDate(day.date)}</p>
+        </div>
+        <div class="text-right">
+          <p class="font-anton text-[14px] text-[#18180F]">${day.eaten.toLocaleString('ru')} ккал</p>
+          <p class="font-roboto text-[11px] font-medium ${isOver ? 'text-red-400' : 'text-green'}">
+            ${(isOver ? '+' : '') + day.delta.toLocaleString('ru')} ккал
+          </p>
+        </div>`;
+      frag.appendChild(item);
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(frag);
+    return wrapper;
+  }
+
+  // ── Toggle entry delete btn ───────────────────────────────────
+  function toggleEntryDelete(item) {
+    document.querySelectorAll('.log-entry.show-del').forEach(el => {
+      if (el !== item) el.classList.remove('show-del');
+    });
+    item.classList.toggle('show-del');
+  }
+
+  // ── Delete single log entry from history ─────────────────────
+  function deleteEntry(e, dateStr, idx) {
+    e.stopPropagation();
+    const key  = 'logs_' + dateStr;
+    const logs = JSON.parse(localStorage.getItem(key) || '[]');
+    logs.splice(idx, 1);
+    localStorage.setItem(key, JSON.stringify(logs));
+    render();
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  // ── Period switch ─────────────────────────────────────────────
+  function switchPeriod(btn) {
+    document.querySelectorAll('.period-tab').forEach(t => {
+      t.classList.remove('text-orange', 'bg-orange-bg');
+      t.classList.add('text-[#8C8C85]', 'bg-white');
+    });
+    btn.classList.remove('text-[#8C8C85]', 'bg-white');
+    btn.classList.add('text-orange', 'bg-orange-bg');
+    activePeriod = btn.dataset.period;
+    render();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function formatTime(ts) {
+    return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  render();
+</script>
+</body>
+</html>

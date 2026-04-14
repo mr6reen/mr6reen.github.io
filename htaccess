@@ -1,0 +1,4 @@
+# Force HTTPS — required for PWA service worker and localStorage across pages
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Caloriq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
+          },
+          fontFamily: {
+            anton:  ['Anton', 'sans-serif'],
+            roboto: ['Roboto', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    /* Only things Tailwind can't do */
+    @keyframes up {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { animation: up 0.35s 0.05s both; }
+    .anim-2 { animation: up 0.35s 0.10s both; }
+    .anim-3 { animation: up 0.35s 0.16s both; }
+    .anim-4 { animation: up 0.35s 0.22s both; }
+    .anim-5 { animation: up 0.35s 0.28s both; }
+    .anim-6 { animation: up 0.35s 0.34s both; }
+
+    /* Card selected scale spring — Tailwind transition can't do cubic-bezier spring */
+    .card { transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .card.selected { transform: scale(1.015); }
+    .card:active   { transform: scale(0.975) !important; }
+
+    /* Checkmark spring */
+    .check-icon {
+      opacity: 0; transform: scale(0.4);
+      transition: opacity 0.18s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .card.selected .check-icon { opacity: 1; transform: scale(1); }
+
+    /* Button arrow hover */
+    .btn-arrow { transition: transform 0.2s; }
+    button:not(:disabled):hover .btn-arrow { transform: translateX(3px); }
+  </style>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#F55E1E"/>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");</script>
+</head>
+<body class="bg-[#F7F7F5] font-roboto min-h-dvh">
+
+<div class="flex flex-col min-h-dvh max-w-lg mx-auto px-6 pt-[env(safe-area-inset-top,52px)] pb-[env(safe-area-inset-bottom,34px)]">
+
+  <!-- Progress dots -->
+  <div class="flex items-center gap-2 pt-3 pb-9 anim-1">
+    <div class="h-1 w-8 rounded-full bg-orange"></div>
+    <div class="h-1 w-3.5 rounded-full bg-orange-dim"></div>
+  </div>
+
+  <!-- Heading -->
+  <p class="text-[11px] font-medium tracking-[0.14em] uppercase text-orange mb-2.5 anim-1">Шаг 1 из 2</p>
+  <h1 class="font-anton text-[44px] leading-[1.02] tracking-[0.5px] text-[#18180F] mb-10 anim-2">
+    Какова твоя<br/><span class="text-orange">главная цель?</span>
+  </h1>
+
+  <!-- Cards -->
+  <div class="flex flex-col gap-3 flex-1">
+
+    <div class="card anim-3 bg-white border-2 border-transparent rounded-[18px] p-[18px] flex items-center gap-4 cursor-pointer select-none"
+         data-js="goal-card" data-goal="lose" onclick="pick(this)">
+      <div data-js="card-icon" class="icon w-[50px] h-[50px] rounded-[14px] bg-[#E8E8E3] flex items-center justify-center shrink-0 transition-colors duration-200">
+        <svg class="w-[22px] h-[22px] stroke-[#8C8C85] transition-[stroke] duration-200" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22,17 13,8 8,13 2,7"/><polyline points="16,17 22,17 22,11"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="font-anton text-[19px] tracking-[0.3px] text-[#18180F] mb-0.5">Похудеть</div>
+        <div class="text-[13px] font-light text-[#8C8C85] leading-snug">Питаться с дефицитом калорий</div>
+      </div>
+      <div data-js="card-check" class="check w-[22px] h-[22px] rounded-full border-2 border-[#E8E8E3] flex items-center justify-center shrink-0 transition-all duration-200">
+        <svg class="check-icon w-[11px] h-[11px]" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1.5,6 5,9.5 10.5,2.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card anim-4 bg-white border-2 border-transparent rounded-[18px] p-[18px] flex items-center gap-4 cursor-pointer select-none"
+         data-js="goal-card" data-goal="keep" onclick="pick(this)">
+      <div data-js="card-icon" class="icon w-[50px] h-[50px] rounded-[14px] bg-[#E8E8E3] flex items-center justify-center shrink-0 transition-colors duration-200">
+        <svg class="w-[22px] h-[22px] stroke-[#8C8C85] transition-[stroke] duration-200" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="8"  x2="20" y2="8"/>
+          <line x1="4" y1="16" x2="20" y2="16"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="font-anton text-[19px] tracking-[0.3px] text-[#18180F] mb-0.5">Сохранить вес</div>
+        <div class="text-[13px] font-light text-[#8C8C85] leading-snug">Поддерживать калории на уровне</div>
+      </div>
+      <div data-js="card-check" class="check w-[22px] h-[22px] rounded-full border-2 border-[#E8E8E3] flex items-center justify-center shrink-0 transition-all duration-200">
+        <svg class="check-icon w-[11px] h-[11px]" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1.5,6 5,9.5 10.5,2.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card anim-5 bg-white border-2 border-transparent rounded-[18px] p-[18px] flex items-center gap-4 cursor-pointer select-none"
+         data-js="goal-card" data-goal="gain" onclick="pick(this)">
+      <div data-js="card-icon" class="icon w-[50px] h-[50px] rounded-[14px] bg-[#E8E8E3] flex items-center justify-center shrink-0 transition-colors duration-200">
+        <svg class="w-[22px] h-[22px] stroke-[#8C8C85] transition-[stroke] duration-200" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22,7 13,16 8,11 2,17"/><polyline points="16,7 22,7 22,13"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="font-anton text-[19px] tracking-[0.3px] text-[#18180F] mb-0.5">Набрать вес</div>
+        <div class="text-[13px] font-light text-[#8C8C85] leading-snug">Строить мышцы с профицитом</div>
+      </div>
+      <div data-js="card-check" class="check w-[22px] h-[22px] rounded-full border-2 border-[#E8E8E3] flex items-center justify-center shrink-0 transition-all duration-200">
+        <svg class="check-icon w-[11px] h-[11px]" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1.5,6 5,9.5 10.5,2.5"/>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Button -->
+  <div class="pt-7 anim-6">
+    <button data-js="btn-next" disabled onclick="next()"
+      class="w-full h-14 rounded-2xl bg-orange font-anton text-lg tracking-wide text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] disabled:bg-[#E8E8E3] disabled:text-[#BBBBB5] disabled:cursor-not-allowed">
+      Продолжить
+      <svg class="btn-arrow w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  let goal = null;
+
+  const btnNext = document.querySelector('[data-js="btn-next"]');
+
+  function pick(card) {
+    // Deselect all
+    document.querySelectorAll('[data-js="goal-card"]').forEach(c => {
+      c.classList.remove('selected', 'border-orange', 'bg-orange-bg', 'shadow-[0_6px_24px_rgba(245,94,30,0.13)]');
+      c.querySelector('[data-js="card-icon"]').classList.remove('bg-orange');
+      c.querySelector('[data-js="card-icon"]').classList.add('bg-[#E8E8E3]');
+      c.querySelector('[data-js="card-icon"] svg').classList.remove('stroke-white');
+      c.querySelector('[data-js="card-icon"] svg').classList.add('stroke-[#8C8C85]');
+      c.querySelector('[data-js="card-check"]').classList.remove('bg-orange', 'border-orange');
+      c.querySelector('[data-js="card-check"]').classList.add('border-[#E8E8E3]');
+    });
+
+    // Select clicked
+    card.classList.add('selected', 'border-orange', 'bg-orange-bg', 'shadow-[0_6px_24px_rgba(245,94,30,0.13)]');
+    card.querySelector('[data-js="card-icon"]').classList.remove('bg-[#E8E8E3]');
+    card.querySelector('[data-js="card-icon"]').classList.add('bg-orange');
+    card.querySelector('[data-js="card-icon"] svg').classList.remove('stroke-[#8C8C85]');
+    card.querySelector('[data-js="card-icon"] svg').classList.add('stroke-white');
+    card.querySelector('[data-js="card-check"]').classList.remove('border-[#E8E8E3]');
+    card.querySelector('[data-js="card-check"]').classList.add('bg-orange', 'border-orange');
+
+    goal = card.dataset.goal;
+    btnNext.disabled = false;
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  function next() {
+    if (!goal) return;
+    localStorage.setItem('goal', goal);
+    window.location.href = 'onboarding-2.html';
+  }
+</script>
+</body>
+</html>

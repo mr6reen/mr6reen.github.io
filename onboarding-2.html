@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Caloriq</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
+          },
+          fontFamily: {
+            anton:  ['Anton', 'sans-serif'],
+            roboto: ['Roboto', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    @keyframes up {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .anim-1 { animation: up 0.35s 0.05s both; }
+    .anim-2 { animation: up 0.35s 0.10s both; }
+    .anim-3 { animation: up 0.35s 0.16s both; }
+    .anim-4 { animation: up 0.35s 0.22s both; }
+    .anim-5 { animation: up 0.35s 0.28s both; }
+    .anim-6 { animation: up 0.35s 0.34s both; }
+
+    /* Calc panel slide-down */
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide-down { animation: slideDown 0.28s ease both; }
+
+    /* Remove number input arrows */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    /* Input focus ring */
+    .field:focus { outline: none; border-color: #F55E1E; box-shadow: 0 0 0 3px rgba(245,94,30,0.12); }
+
+    /* Activity option selected */
+    .act-btn.selected { background: #F55E1E; color: #fff; border-color: #F55E1E; }
+
+    /* Button arrow hover */
+    .btn-arrow { transition: transform 0.2s; }
+    button:not(:disabled):hover .btn-arrow { transform: translateX(3px); }
+  </style>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#F55E1E"/>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");</script>
+</head>
+<body class="bg-[#F7F7F5] font-roboto min-h-dvh">
+
+<div class="flex flex-col min-h-dvh max-w-lg mx-auto px-6 pt-[env(safe-area-inset-top,52px)] pb-[env(safe-area-inset-bottom,34px)]">
+
+  <!-- Progress dots -->
+  <div class="flex items-center gap-2 pt-3 pb-9 anim-1">
+    <div class="h-1 w-3.5 rounded-full bg-orange-dim"></div>
+    <div class="h-1 w-8  rounded-full bg-orange"></div>
+  </div>
+
+  <!-- Heading -->
+  <p class="text-[11px] font-medium tracking-[0.14em] uppercase text-orange mb-2.5 anim-1">Шаг 2 из 2</p>
+  <h1 class="font-anton text-[44px] leading-[1.02] tracking-[0.5px] text-[#18180F] mb-2 anim-2">
+    Твои <span class="text-orange">калории</span><br/>на день
+  </h1>
+  <p class="text-[14px] text-[#8C8C85] font-light mb-8 anim-2">Введи сам или мы посчитаем за тебя</p>
+
+  <!-- Manual input -->
+  <div class="anim-3">
+    <div class="bg-white rounded-[18px] p-5 flex items-center gap-4">
+      <div class="flex-1">
+        <p class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1.5">Калории в день</p>
+        <input
+          data-js="calories-input"
+          type="number"
+          placeholder="например, 2000"
+          min="800" max="9999"
+          class="field w-full font-anton text-[36px] text-[#18180F] bg-transparent border-b-2 border-[#E8E8E3] pb-1 transition-all duration-200 placeholder:text-[#DDDDD8]"
+          oninput="onCaloriesInput()"
+        />
+      </div>
+      <span class="font-roboto text-[13px] text-[#8C8C85] font-light self-end pb-1.5 shrink-0">ккал</span>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="flex items-center gap-3 my-5 anim-4">
+    <div class="flex-1 h-px bg-[#E8E8E3]"></div>
+    <span class="text-[12px] text-[#B0B0AA] font-light">или</span>
+    <div class="flex-1 h-px bg-[#E8E8E3]"></div>
+  </div>
+
+  <!-- Calculate toggle button -->
+  <div class="anim-4">
+    <button data-js="btn-calc-toggle" onclick="toggleCalc()"
+      class="w-full h-12 rounded-2xl border-2 border-[#E8E8E3] bg-white font-roboto text-[14px] font-medium text-[#8C8C85] flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.98]">
+      <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      Рассчитать за меня
+      <svg data-js="calc-chevron" class="w-4 h-4 ml-auto transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6,9 12,15 18,9"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Calculator panel (hidden by default) -->
+  <div data-js="calc-panel" class="hidden mt-4">
+    <div class="bg-white rounded-[18px] p-5 flex flex-col gap-4 slide-down">
+
+      <!-- Age + Weight row -->
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1.5 block">Возраст</label>
+          <div class="flex items-center border-b-2 border-[#E8E8E3] pb-1">
+            <input data-js="input-age" type="number" placeholder="25" min="10" max="100"
+              class="field w-full font-anton text-[26px] text-[#18180F] bg-transparent placeholder:text-[#DDDDD8] transition-all duration-200"
+              oninput="tryAutoCalc()"/>
+            <span class="text-[13px] text-[#8C8C85] font-light shrink-0 ml-1">лет</span>
+          </div>
+        </div>
+        <div class="flex-1">
+          <label class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1.5 block">Вес</label>
+          <div class="flex items-center border-b-2 border-[#E8E8E3] pb-1">
+            <input data-js="input-weight" type="number" placeholder="70" min="30" max="300"
+              class="field w-full font-anton text-[26px] text-[#18180F] bg-transparent placeholder:text-[#DDDDD8] transition-all duration-200"
+              oninput="tryAutoCalc()"/>
+            <span class="text-[13px] text-[#8C8C85] font-light shrink-0 ml-1">кг</span>
+          </div>
+        </div>
+        <div class="flex-1">
+          <label class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-1.5 block">Рост</label>
+          <div class="flex items-center border-b-2 border-[#E8E8E3] pb-1">
+            <input data-js="input-height" type="number" placeholder="170" min="100" max="250"
+              class="field w-full font-anton text-[26px] text-[#18180F] bg-transparent placeholder:text-[#DDDDD8] transition-all duration-200"
+              oninput="tryAutoCalc()"/>
+            <span class="text-[13px] text-[#8C8C85] font-light shrink-0 ml-1">см</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sex -->
+      <div>
+        <label class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-2 block">Пол</label>
+        <div class="flex gap-2">
+          <button data-js="sex-btn" data-sex="male" onclick="pickSex(this)"
+            class="act-btn flex-1 h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97]">
+            Мужской
+          </button>
+          <button data-js="sex-btn" data-sex="female" onclick="pickSex(this)"
+            class="act-btn flex-1 h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97]">
+            Женский
+          </button>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div>
+        <label class="text-[11px] font-medium tracking-[0.1em] uppercase text-[#8C8C85] mb-2 block">Активность</label>
+        <div class="flex flex-col gap-2">
+          <button data-js="act-btn" data-act="1.2" onclick="pickAct(this)"
+            class="act-btn w-full h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97] text-left px-3">
+            🛋 Сидячий образ жизни
+          </button>
+          <button data-js="act-btn" data-act="1.375" onclick="pickAct(this)"
+            class="act-btn w-full h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97] text-left px-3">
+            🚶 Лёгкая активность (1–3 раза/нед)
+          </button>
+          <button data-js="act-btn" data-act="1.55" onclick="pickAct(this)"
+            class="act-btn w-full h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97] text-left px-3">
+            🏃 Умеренная (3–5 раз/нед)
+          </button>
+          <button data-js="act-btn" data-act="1.725" onclick="pickAct(this)"
+            class="act-btn w-full h-10 rounded-xl border-2 border-[#E8E8E3] font-roboto text-[13px] font-medium text-[#8C8C85] transition-all duration-200 active:scale-[0.97] text-left px-3">
+            💪 Высокая (6–7 раз/нед)
+          </button>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div data-js="calc-result" class="hidden bg-orange-bg rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] font-medium tracking-[0.1em] uppercase text-orange mb-0.5">Рекомендуем</p>
+          <p data-js="result-value" class="font-anton text-[30px] text-orange leading-none"></p>
+        </div>
+        <button onclick="applyCalc()"
+          class="h-10 px-4 rounded-xl bg-orange text-white font-roboto text-[13px] font-medium transition-all duration-200 active:scale-[0.97]">
+          Применить
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="flex-1"></div>
+
+  <!-- Button -->
+  <div class="pt-7 anim-5">
+    <button data-js="btn-next" disabled onclick="next()"
+      class="w-full h-14 rounded-2xl bg-orange font-anton text-lg tracking-wide text-white flex items-center justify-center gap-2 transition-all duration-200 active:scale-[0.97] disabled:bg-[#E8E8E3] disabled:text-[#BBBBB5] disabled:cursor-not-allowed">
+      Продолжить
+      <svg class="btn-arrow w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/>
+      </svg>
+    </button>
+  </div>
+
+</div>
+
+<script>
+  // DOM refs via data-js
+  const caloriesInput = document.querySelector('[data-js="calories-input"]');
+  const btnNext       = document.querySelector('[data-js="btn-next"]');
+  const calcPanel     = document.querySelector('[data-js="calc-panel"]');
+  const calcChevron   = document.querySelector('[data-js="calc-chevron"]');
+  const calcResult    = document.querySelector('[data-js="calc-result"]');
+  const resultValue   = document.querySelector('[data-js="result-value"]');
+  const inputAge      = document.querySelector('[data-js="input-age"]');
+  const inputWeight   = document.querySelector('[data-js="input-weight"]');
+  const inputHeight   = document.querySelector('[data-js="input-height"]');
+
+  let calcOpen   = false;
+  let selectedSex = null;
+  let selectedAct = null;
+
+  // Toggle calculator panel
+  function toggleCalc() {
+    calcOpen = !calcOpen;
+    calcPanel.classList.toggle('hidden', !calcOpen);
+    calcChevron.style.transform = calcOpen ? 'rotate(180deg)' : '';
+  }
+
+  // Sex selection
+  function pickSex(btn) {
+    document.querySelectorAll('[data-js="sex-btn"]').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedSex = btn.dataset.sex;
+    tryAutoCalc();
+  }
+
+  // Activity selection
+  function pickAct(btn) {
+    document.querySelectorAll('[data-js="act-btn"]').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedAct = parseFloat(btn.dataset.act);
+    tryAutoCalc();
+  }
+
+  // Auto-calculate when all fields filled
+  function tryAutoCalc() {
+    const age    = parseInt(inputAge.value);
+    const weight = parseFloat(inputWeight.value);
+    const height = parseFloat(inputHeight.value);
+    if (!age || !weight || !height || !selectedSex || !selectedAct) return;
+
+    const result = calculate(age, weight, height, selectedSex, selectedAct);
+    resultValue.textContent = result + ' ккал';
+    calcResult.classList.remove('hidden');
+  }
+
+  /**
+   * Mifflin-St Jeor formula + activity multiplier + goal adjustment
+   * @param {number} age
+   * @param {number} weight - kg
+   * @param {number} height - cm
+   * @param {string} sex - 'male' | 'female'
+   * @param {number} activity - multiplier (1.2–1.725)
+   * @returns {number} recommended daily calories
+   */
+  function calculate(age, weight, height, sex, activity) {
+    // BMR
+    let bmr = sex === 'male'
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+
+    // TDEE
+    let tdee = Math.round(bmr * activity);
+
+    // Adjust by goal from screen 1
+    const goal = localStorage.getItem('goal') || 'keep';
+    if (goal === 'lose') tdee -= 400;
+    if (goal === 'gain') tdee += 300;
+
+    return Math.max(1200, tdee); // minimum safe threshold
+  }
+
+  // Apply calculated value to manual input
+  function applyCalc() {
+    const val = resultValue.textContent.replace(' ккал', '');
+    caloriesInput.value = val;
+    onCaloriesInput();
+    toggleCalc(); // close panel
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  // Manual input handler
+  function onCaloriesInput() {
+    const val = parseInt(caloriesInput.value);
+    btnNext.disabled = !(val >= 800 && val <= 9999);
+  }
+
+  function next() {
+    const val = parseInt(caloriesInput.value);
+    if (!val) return;
+    localStorage.setItem('calories', val);
+    window.location.href = 'index.html';
+  }
+</script>
+</body>
+</html>
