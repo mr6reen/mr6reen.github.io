@@ -2,16 +2,16 @@ const CACHE = 'caloriq-v1';
 
 // All files to cache on install
 const FILES = [
-  '/',
-  '/index.html',
-  '/onboarding-1.html',
-  '/onboarding-2.html',
-  '/presets.html',
-  '/history.html',
-  '/settings.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/caloriq/',
+  '/caloriq/index.html',
+  '/caloriq/onboarding-1.html',
+  '/caloriq/onboarding-2.html',
+  '/caloriq/presets.html',
+  '/caloriq/history.html',
+  '/caloriq/settings.html',
+  '/caloriq/manifest.json',
+  '/caloriq/icon-192.png',
+  '/caloriq/icon-512.png',
 ];
 
 // Install: cache all files
