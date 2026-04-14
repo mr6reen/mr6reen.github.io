@@ -2,21 +2,21 @@
   "name": "Caloriq",
   "short_name": "Caloriq",
   "description": "Простой счётчик калорий с пресетами",
-  "start_url": "/caloriq/index.html",
-  "scope": "/caloriq/",
+  "start_url": "/index.html",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F7F7F5",
   "theme_color": "#F55E1E",
   "icons": [
     {
-      "src": "/caloriq/icon-192.png",
+      "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/caloriq/icon-512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
