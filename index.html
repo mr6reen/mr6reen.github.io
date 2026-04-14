@@ -276,6 +276,11 @@
     '🍽️','🥄','🍴',
   ];
 
+  // ── Redirect to onboarding if first launch ─────────────────────
+  if (!localStorage.getItem('calories')) {
+    window.location.replace('onboarding-1.html');
+  }
+
   // ── State ──────────────────────────────────────────────────────
   const DAILY     = parseInt(localStorage.getItem('calories')) || 2000;
   let presets     = JSON.parse(localStorage.getItem('presets')          || '[]');
