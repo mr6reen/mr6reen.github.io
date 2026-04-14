@@ -1,4 +1,4 @@
-const CACHE = 'caloriq-v1';
+const CACHE = 'caloriq-v2';
 
 const FILES = [
   '/',
@@ -11,6 +11,10 @@ const FILES = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
+  '/js/tailwind.config.js',
+  '/js/global.js',
+  '/js/storage.js',
+  '/components/nav.js',
 ];
 
 // Install: cache all files

@@ -7,22 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>Caloriq</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
-            green:  { DEFAULT: '#27AE60', bg: '#E8F5EE' },
-          },
-          fontFamily: {
-            anton:  ['Anton', 'sans-serif'],
-            roboto: ['Roboto', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
+  <script src="js/tailwind.config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -214,15 +199,16 @@
 <!-- ════════════════════════════════
      SCRIPTS
 ════════════════════════════════ -->
+<script src="js/global.js"></script>
+<script src="js/storage.js"></script>
+
 <script>
   // ── Redirect to onboarding if first launch ─────────────────────
   if (!localStorage.getItem('calories')) {
     window.location.replace('onboarding-1.html');
   }
 
-  // ── State ──────────────────────────────────────────────────────
-  const DAILY     = parseInt(localStorage.getItem('calories')) || 2000;
-  let presets     = JSON.parse(localStorage.getItem('presets')         || '[]');
+  // ── State ──────────────────────────────────────────────────────  let presets     = JSON.parse(localStorage.getItem('presets')         || '[]');
   let todayLogs   = JSON.parse(localStorage.getItem('logs_' + today()) || '[]');
   let overlayTab  = 'all';
   let lastLog     = null;
@@ -241,22 +227,8 @@
   const overlay       = document.querySelector('[data-js="overlay"]');
   const overlayGrid   = document.querySelector('[data-js="overlay-grid"]');
   const overlayCreate = document.querySelector('[data-js="overlay-create-btn"]');
-
-  // ── Helpers ────────────────────────────────────────────────────
-  function today() {
-    return new Date().toISOString().slice(0, 10);
-  }
-
   function eaten() {
     return todayLogs.reduce((s, l) => s + l.kcal, 0);
-  }
-
-  function saveLogs() {
-    localStorage.setItem('logs_' + today(), JSON.stringify(todayLogs));
-  }
-
-  function formatTime(ts) {
-    return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
   // ── Widget update ──────────────────────────────────────────────
@@ -336,7 +308,7 @@
   function deleteLog(e, idx) {
     e.stopPropagation();
     todayLogs.splice(idx, 1);
-    saveLogs();
+    saveLogs(todayLogs);
     updateWidget();
     renderLog();
     if (navigator.vibrate) navigator.vibrate(10);
@@ -357,7 +329,7 @@
       time:  Date.now(),
     });
     lastLog = { logIdx: todayLogs.length - 1, kcal: p.kcal };
-    saveLogs();
+    saveLogs(todayLogs);
     updateWidget();
     renderLog();
     scheduleEveningReminder();
@@ -375,7 +347,7 @@
     if (!lastLog) return;
     todayLogs.splice(lastLog.logIdx, 1);
     lastLog = null;
-    saveLogs();
+    saveLogs(todayLogs);
     updateWidget();
     renderLog();
     hideToast();

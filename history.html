@@ -7,22 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>Caloriq — История</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
-            green:  { DEFAULT: '#27AE60', bg: '#E8F5EE' },
-          },
-          fontFamily: {
-            anton:  ['Anton', 'sans-serif'],
-            roboto: ['Roboto', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
+  <script src="js/tailwind.config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -108,10 +93,11 @@
 <div data-js="bottom-nav"></div>
 <script src="components/nav.js"></script>
 
+<script src="js/global.js"></script>
+<script src="js/storage.js"></script>
+
 <script>
   // ── Helpers ──────────────────────────────────────────────────
-  const DAILY = parseInt(localStorage.getItem('calories')) || 2000;
-
   /** Get all log keys sorted desc: ['logs_2026-04-14', ...] */
   function getAllLogKeys() {
     return Object.keys(localStorage)
@@ -465,11 +451,6 @@
     btn.classList.add('text-orange', 'bg-orange-bg');
     activePeriod = btn.dataset.period;
     render();
-  }
-
-  // ── Helpers ───────────────────────────────────────────────────
-  function formatTime(ts) {
-    return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
   // ── Init ─────────────────────────────────────────────────────

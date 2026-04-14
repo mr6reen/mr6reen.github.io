@@ -7,21 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>Caloriq — Настройки</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
-          },
-          fontFamily: {
-            anton:  ['Anton', 'sans-serif'],
-            roboto: ['Roboto', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
+  <script src="js/tailwind.config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -330,6 +316,9 @@
 
 <!-- Toast -->
 <div data-js="toast" class="hidden fixed bottom-10 left-1/2 bg-[#18180F] text-white rounded-2xl px-5 py-3 z-50 shadow-lg whitespace-nowrap font-roboto text-[13px] font-medium" style="transform:translateX(-50%)"></div>
+
+<script src="js/global.js"></script>
+<script src="js/storage.js"></script>
 
 <script>
   // ── DOM refs ───────────────────────────────────────────────────

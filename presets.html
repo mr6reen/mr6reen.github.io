@@ -7,22 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>Caloriq — Пресеты</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            orange: { DEFAULT: '#F55E1E', bg: '#FEF0EA', dim: '#FCDCCE' },
-            green:  { DEFAULT: '#27AE60', bg: '#E8F5EE' },
-          },
-          fontFamily: {
-            anton:  ['Anton', 'sans-serif'],
-            roboto: ['Roboto', 'sans-serif'],
-          },
-        }
-      }
-    }
-  </script>
+  <script src="js/tailwind.config.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -208,6 +193,9 @@
   </div>
 </div>
 
+<script src="js/global.js"></script>
+<script src="js/storage.js"></script>
+
 <script>
   // ── Food emojis ────────────────────────────────────────────────
   const FOOD_EMOJIS = [
@@ -348,7 +336,7 @@
   function deletePreset(idx) {
     if (!confirm(`Удалить пресет «${presets[idx].name}»?`)) return;
     presets.splice(idx, 1);
-    savePresets();
+    savePresets(presets);
     renderList();
     if (navigator.vibrate) navigator.vibrate(10);
   }
@@ -531,14 +519,11 @@
       presets.push(preset);
     }
 
-    savePresets();
+    savePresets(presets);
     closeModal();
     renderList();
     if (navigator.vibrate) navigator.vibrate(10);
   }
-
-  function savePresets() { localStorage.setItem('presets', JSON.stringify(presets)); }
-
   // ── Init ───────────────────────────────────────────────────────
   renderList();
 </script>
