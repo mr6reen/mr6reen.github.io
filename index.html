@@ -33,7 +33,6 @@
     .anim-1 { animation: up 0.3s 0.05s both; }
     .anim-2 { animation: up 0.3s 0.12s both; }
     .anim-3 { animation: up 0.3s 0.18s both; }
-    .anim-4 { animation: up 0.3s 0.24s both; }
 
     @keyframes punch {
       0%   { transform: scale(1); }
@@ -48,21 +47,10 @@
     .preset-card { transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.15s; }
     .preset-card:active { transform: scale(0.94); box-shadow: none; }
 
-    @keyframes shimmer {
-      0%   { background-position: -200% 0; }
-      100% { background-position:  200% 0; }
-    }
-
     @keyframes toastIn  { from { opacity:0; transform: translateX(-50%) translateY(16px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
     @keyframes toastOut { from { opacity:1; transform: translateX(-50%) translateY(0); }    to { opacity:0; transform: translateX(-50%) translateY(16px); } }
     .toast-in  { animation: toastIn  0.25s ease both; }
     .toast-out { animation: toastOut 0.25s ease both; }
-
-    .tabs-scroll { scrollbar-width: none; }
-    .tabs-scroll::-webkit-scrollbar { display: none; }
-
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-    input[type=number] { -moz-appearance: textfield; }
 
     /* Log item delete reveal */
     .log-item .delete-btn {
@@ -77,28 +65,36 @@
       pointer-events: auto;
     }
 
-    /* Emoji grid scroll */
-    .emoji-grid { scrollbar-width: thin; scrollbar-color: #E0E0DC transparent; }
-    .emoji-grid::-webkit-scrollbar { width: 4px; }
-    .emoji-grid::-webkit-scrollbar-thumb { background: #E0E0DC; border-radius: 4px; }
+    .tabs-scroll { scrollbar-width: none; }
+    .tabs-scroll::-webkit-scrollbar { display: none; }
 
-    .emoji-btn { transition: transform 0.12s, background 0.12s; }
-    .emoji-btn:active { transform: scale(0.85); }
-    .emoji-btn.selected { background: #FEF0EA; outline: 2px solid #F55E1E; }
+    /* Overlay slide-up / slide-down */
+    @keyframes overlayIn  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes overlayOut { from { transform: translateY(0); }    to { transform: translateY(100%); } }
+    .overlay-in  { animation: overlayIn  0.38s cubic-bezier(0.32, 0.72, 0, 1) both; }
+    .overlay-out { animation: overlayOut 0.28s cubic-bezier(0.32, 0,    0.67, 0) both; }
+
+    /* FAB pulse on first appearance */
+    @keyframes fabPop { 0% { transform: scale(0); } 70% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    .fab-pop { animation: fabPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+    [data-js="fab"] { transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1); }
+    [data-js="fab"]:active { transform: scale(0.88); }
   </style>
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#F55E1E"/>
   <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js")</script>
 </head>
-<body class="bg-[#F7F7F5] font-roboto select-none overflow-hidden h-dvh">
+<body class="bg-[#F7F7F5] font-roboto select-none">
 
 <!-- ════════════════════════════════
-     MAIN SCREEN
+     MAIN PAGE
 ════════════════════════════════ -->
-<div class="flex flex-col h-dvh max-w-lg mx-auto">
+<div class="max-w-lg mx-auto">
 
   <!-- Header -->
-  <div class="flex items-center justify-between px-6 pt-[env(safe-area-inset-top,52px)] pb-3 anim-1">
+  <div class="flex items-center justify-between px-6 pb-3 anim-1"
+       style="padding-top: calc(env(safe-area-inset-top, 0px) + 20px)">
     <div>
       <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85]" data-js="header-date"></p>
       <p class="font-anton text-[18px] text-[#18180F] leading-tight">Сегодня</p>
@@ -112,170 +108,113 @@
     </button>
   </div>
 
-  <!-- Scrollable content area -->
-  <div class="flex-1 overflow-y-auto">
-
-    <!-- Calorie widget -->
-    <div class="mx-6 bg-white rounded-[22px] p-5 mb-4 anim-2">
-      <div class="flex items-end justify-between mb-1">
-        <div>
-          <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85] mb-1">Осталось</p>
-          <p data-js="kcal-remaining" class="font-anton text-[56px] leading-none text-[#18180F]">—</p>
-        </div>
-        <div class="text-right pb-2">
-          <p class="text-[13px] text-[#8C8C85] font-light">из <span data-js="kcal-total" class="font-medium text-[#18180F]">—</span></p>
-          <p class="text-[13px] text-[#8C8C85] font-light">съедено <span data-js="kcal-eaten" class="font-medium text-[#18180F]">0</span></p>
-        </div>
+  <!-- Calorie widget -->
+  <div class="mx-6 bg-white rounded-[22px] p-5 mb-4 anim-2">
+    <div class="flex items-end justify-between mb-1">
+      <div>
+        <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85] mb-1">Осталось</p>
+        <p data-js="kcal-remaining" class="font-anton text-[56px] leading-none text-[#18180F]">—</p>
       </div>
-      <div class="h-2 bg-[#F0F0ED] rounded-full overflow-hidden mt-3">
-        <div data-js="progress-fill" id="progress-fill" class="h-full rounded-full bg-orange" style="width:0%"></div>
+      <div class="text-right pb-2">
+        <p class="text-[13px] text-[#8C8C85] font-light">из <span data-js="kcal-total" class="font-medium text-[#18180F]">—</span></p>
+        <p class="text-[13px] text-[#8C8C85] font-light">съедено <span data-js="kcal-eaten" class="font-medium text-[#18180F]">0</span></p>
       </div>
-      <p data-js="status-label" class="text-[12px] font-light mt-2 min-h-[16px]"></p>
+    </div>
+    <div class="h-2 bg-[#F0F0ED] rounded-full overflow-hidden mt-3">
+      <div data-js="progress-fill" id="progress-fill" class="h-full rounded-full bg-orange" style="width:0%"></div>
+    </div>
+    <p data-js="status-label" class="text-[12px] font-light mt-2 min-h-[16px]"></p>
+  </div>
+
+  <!-- Today's log -->
+  <div data-js="log-section" class="mx-6 mb-4 anim-3">
+    <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85] mb-2 px-1">Съедено сегодня</p>
+    <div data-js="log-list" class="flex flex-col gap-2"></div>
+  </div>
+
+  <!-- Bottom spacer so content clears fixed nav + FAB -->
+  <div style="height: calc(env(safe-area-inset-bottom, 0px) + 160px)"></div>
+
+</div>
+
+<!-- ════════════════════════════════
+     FAB — log food button
+════════════════════════════════ -->
+<button data-js="fab" onclick="openOverlay()"
+  class="fixed right-5 w-16 h-16 rounded-full bg-orange flex items-center justify-center shadow-2xl fab-pop"
+  style="z-index:25; bottom: calc(env(safe-area-inset-bottom, 0px) + 78px)">
+  <span style="font-size:30px; line-height:1">😋</span>
+</button>
+
+<!-- ════════════════════════════════
+     PRESET OVERLAY (full-screen)
+════════════════════════════════ -->
+<div data-js="overlay" class="hidden fixed inset-0 bg-[#F7F7F5] flex flex-col" style="z-index:30">
+  <div class="flex flex-col max-w-lg mx-auto w-full h-full">
+
+    <!-- Overlay header -->
+    <div class="flex items-center justify-between px-5 pb-3 bg-[#F7F7F5] shrink-0"
+         style="padding-top: calc(env(safe-area-inset-top, 0px) + 16px)">
+      <p class="font-anton text-[26px] text-[#18180F] leading-tight">Что съели?</p>
+      <div class="flex items-center gap-2">
+        <!-- Shown only when presets exist -->
+        <button data-js="overlay-create-btn"
+          onclick="window.location.href='presets.html'"
+          class="hidden h-8 px-3 rounded-full border border-[#E0E0DC] bg-white font-roboto text-[12px] font-medium text-[#8C8C85] active:bg-[#F0F0ED] transition-colors">
+          + Создать пресет
+        </button>
+        <button onclick="closeOverlay()"
+          class="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#8C8C85" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <!-- Today's log -->
-    <div data-js="log-section" class="mx-6 mb-4 anim-3">
-      <p class="text-[11px] font-medium tracking-[0.12em] uppercase text-[#8C8C85] mb-2 px-1">Съедено сегодня</p>
-      <div data-js="log-list" class="flex flex-col gap-2"></div>
+    <!-- Category tabs -->
+    <div class="tabs-scroll flex gap-1 px-5 mb-3 overflow-x-auto shrink-0" data-js="overlay-tabs">
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-orange bg-orange-bg transition-colors duration-150"
+        data-tab="all" onclick="switchOverlayTab(this)">Все</button>
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+        data-tab="breakfast" onclick="switchOverlayTab(this)">Завтрак</button>
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+        data-tab="lunch" onclick="switchOverlayTab(this)">Обед</button>
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+        data-tab="dinner" onclick="switchOverlayTab(this)">Ужин</button>
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+        data-tab="snack" onclick="switchOverlayTab(this)">Перекус</button>
+      <button class="overlay-tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
+        data-tab="drinks" onclick="switchOverlayTab(this)">Напитки</button>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs-scroll flex gap-1 px-6 mb-3 overflow-x-auto anim-3" data-js="tabs">
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-orange bg-orange-bg transition-colors duration-150"
-        data-tab="all" onclick="switchTab(this)">Все</button>
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
-        data-tab="breakfast" onclick="switchTab(this)">Завтрак</button>
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
-        data-tab="lunch" onclick="switchTab(this)">Обед</button>
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
-        data-tab="dinner" onclick="switchTab(this)">Ужин</button>
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
-        data-tab="snack" onclick="switchTab(this)">Перекус</button>
-      <button class="tab shrink-0 px-4 h-9 rounded-full font-roboto text-[13px] font-medium text-[#8C8C85] transition-colors duration-150"
-        data-tab="drinks" onclick="switchTab(this)">Напитки</button>
+    <!-- Preset grid (scrollable) -->
+    <div class="flex-1 overflow-y-auto px-5 pb-6">
+      <div data-js="overlay-grid" class="grid grid-cols-3 gap-3"></div>
     </div>
 
-    <!-- Preset grid -->
-    <div class="px-6 pb-6">
-      <div data-js="preset-grid" class="grid grid-cols-3 gap-3"></div>
-    </div>
-
-  </div><!-- end scroll area -->
-
-  <!-- Bottom tab bar -->
-  <div class="flex border-t border-[#EEEEED] bg-white pb-[env(safe-area-inset-bottom,16px)] shrink-0">
-    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-orange">
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>
-      </svg>
-      <span class="text-[10px] font-medium">Главная</span>
-    </button>
-    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='presets.html'">
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/>
-      </svg>
-      <span class="text-[10px] font-medium">Пресеты</span>
-    </button>
-    <button class="flex-1 flex flex-col items-center gap-1 pt-3 pb-2 text-[#8C8C85]" onclick="window.location.href='history.html'">
-      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
-      <span class="text-[10px] font-medium">История</span>
-    </button>
   </div>
 </div>
 
 <!-- ════════════════════════════════
      TOAST
 ════════════════════════════════ -->
-<div data-js="toast" class="hidden fixed bottom-24 left-1/2 bg-[#18180F] text-white rounded-2xl px-5 py-3 flex items-center gap-3 z-50 shadow-lg whitespace-nowrap" style="transform:translateX(-50%)">
+<div data-js="toast" class="hidden fixed left-1/2 bg-[#18180F] text-white rounded-2xl px-5 py-3 flex items-center gap-3 z-50 shadow-lg whitespace-nowrap"
+     style="bottom: calc(env(safe-area-inset-bottom, 0px) + 88px); transform: translateX(-50%)">
   <span data-js="toast-text" class="font-roboto text-[13px] font-medium"></span>
   <button data-js="toast-undo" onclick="undoLog()" class="font-anton text-[13px] text-orange tracking-wide">ОТМЕНА</button>
 </div>
 
 <!-- ════════════════════════════════
-     ADD PRESET MODAL
+     BOTTOM NAV (component)
 ════════════════════════════════ -->
-<div data-js="modal" class="hidden fixed inset-0 z-40">
-  <div class="absolute inset-0 bg-black/30" style="backdrop-filter:blur(4px)" onclick="closeModal()"></div>
-  <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-[28px] px-6 pt-5 pb-[env(safe-area-inset-bottom,24px)]">
-    <div class="w-10 h-1 rounded-full bg-[#E0E0DC] mx-auto mb-5"></div>
-    <h2 class="font-anton text-[24px] text-[#18180F] mb-5">Новый пресет</h2>
-
-    <!-- Emoji + name -->
-    <div class="flex items-center gap-3 mb-4">
-      <button data-js="modal-emoji-btn" onclick="openEmojiPicker()"
-        class="w-14 h-14 rounded-2xl bg-orange-bg text-[28px] flex items-center justify-center shrink-0 active:scale-95 transition-transform border-2 border-transparent hover:border-orange">
-        🍽️
-      </button>
-      <input data-js="modal-name" type="text" placeholder="Название пресета"
-        class="flex-1 h-14 rounded-2xl border-2 border-[#E8E8E3] px-4 font-roboto text-[15px] text-[#18180F] placeholder:text-[#CCCCC8] focus:outline-none focus:border-orange transition-colors"/>
-    </div>
-
-    <!-- Calories -->
-    <div class="flex items-center gap-3 mb-4">
-      <input data-js="modal-calories" type="number" placeholder="0"
-        class="flex-1 h-14 rounded-2xl border-2 border-[#E8E8E3] px-4 font-anton text-[26px] text-[#18180F] placeholder:text-[#CCCCC8] focus:outline-none focus:border-orange transition-colors"/>
-      <span class="font-roboto text-[14px] text-[#8C8C85] font-light shrink-0">ккал</span>
-    </div>
-
-    <!-- Category -->
-    <div class="flex gap-2 flex-wrap mb-6">
-      <button class="cat-btn selected px-3 h-8 rounded-xl border-2 border-orange bg-orange-bg text-orange font-roboto text-[12px] font-medium transition-all duration-150 active:scale-95"
-        data-cat="breakfast" onclick="pickCat(this)">Завтрак</button>
-      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all duration-150 active:scale-95"
-        data-cat="lunch" onclick="pickCat(this)">Обед</button>
-      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all duration-150 active:scale-95"
-        data-cat="dinner" onclick="pickCat(this)">Ужин</button>
-      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all duration-150 active:scale-95"
-        data-cat="snack" onclick="pickCat(this)">Перекус</button>
-      <button class="cat-btn px-3 h-8 rounded-xl border-2 border-[#E8E8E3] text-[#8C8C85] font-roboto text-[12px] font-medium transition-all duration-150 active:scale-95"
-        data-cat="drinks" onclick="pickCat(this)">Напитки</button>
-    </div>
-
-    <button data-js="modal-save" disabled onclick="savePreset()"
-      class="w-full h-14 rounded-2xl bg-orange font-anton text-lg tracking-wide text-white flex items-center justify-center transition-all duration-200 active:scale-[0.97] disabled:bg-[#E8E8E3] disabled:text-[#BBBBB5] disabled:cursor-not-allowed">
-      Сохранить
-    </button>
-  </div>
-</div>
+<div data-js="bottom-nav"></div>
+<script src="components/nav.js"></script>
 
 <!-- ════════════════════════════════
-     EMOJI PICKER MODAL
+     SCRIPTS
 ════════════════════════════════ -->
-<div data-js="emoji-modal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/40" onclick="closeEmojiPicker()"></div>
-  <div class="absolute bottom-0 left-0 right-0 max-w-lg mx-auto bg-white rounded-t-[28px] pt-5 pb-[env(safe-area-inset-bottom,24px)]" style="max-height:70dvh; display:flex; flex-direction:column;">
-    <div class="w-10 h-1 rounded-full bg-[#E0E0DC] mx-auto mb-4 shrink-0"></div>
-    <p class="font-anton text-[20px] text-[#18180F] px-6 mb-4 shrink-0">Выбери иконку</p>
-    <!-- Scrollable emoji grid -->
-    <div data-js="emoji-grid" class="emoji-grid overflow-y-auto px-6 pb-4 grid grid-cols-7 gap-2"></div>
-  </div>
-</div>
-
 <script>
-  // ── Food emojis (relevant only) ────────────────────────────────
-  const FOOD_EMOJIS = [
-    // Fruits
-    '🍎','🍊','🍋','🍇','🍓','🫐','🍌','🍉','🍑','🥭','🍍','🥥','🥝','🍅',
-    // Vegetables
-    '🥑','🥦','🥬','🥒','🌽','🥕','🧅','🥔','🍠',
-    // Protein
-    '🥚','🍳','🥩','🍗','🐟','🦐','🧀',
-    // Grains & bread
-    '🍞','🥐','🥖','🧇','🥞','🍚','🍜','🍝','🥙','🌮','🌯',
-    // Meals
-    '🍱','🥗','🍛','🍲','🫕','🥘','🍔','🍟','🍕','🌭','🫔',
-    // Snacks & sweets
-    '🍫','🍪','🍩','🍰','🎂','🧁','🍮','🍯','🥜','🌰','🍿',
-    // Dairy & other
-    '🥛','🧈','🫙',
-    // Drinks
-    '☕','🫖','🍵','🧃','🥤','🧋','🍶','🥛','🍷','🍺','💧',
-    // Generic
-    '🍽️','🥄','🍴',
-  ];
-
   // ── Redirect to onboarding if first launch ─────────────────────
   if (!localStorage.getItem('calories')) {
     window.location.replace('onboarding-1.html');
@@ -283,12 +222,11 @@
 
   // ── State ──────────────────────────────────────────────────────
   const DAILY     = parseInt(localStorage.getItem('calories')) || 2000;
-  let presets     = JSON.parse(localStorage.getItem('presets')          || '[]');
-  let todayLogs   = JSON.parse(localStorage.getItem('logs_' + today())  || '[]');
-  let activeTab   = 'all';
+  let presets     = JSON.parse(localStorage.getItem('presets')         || '[]');
+  let todayLogs   = JSON.parse(localStorage.getItem('logs_' + today()) || '[]');
+  let overlayTab  = 'all';
   let lastLog     = null;
   let toastTimer  = null;
-  let selectedEmoji = '🍽️';
 
   // ── DOM refs ───────────────────────────────────────────────────
   const kcalRemaining = document.querySelector('[data-js="kcal-remaining"]');
@@ -296,18 +234,13 @@
   const kcalEaten     = document.querySelector('[data-js="kcal-eaten"]');
   const progressFill  = document.querySelector('[data-js="progress-fill"]');
   const statusLabel   = document.querySelector('[data-js="status-label"]');
-  const presetGrid    = document.querySelector('[data-js="preset-grid"]');
   const logList       = document.querySelector('[data-js="log-list"]');
   const logSection    = document.querySelector('[data-js="log-section"]');
   const toast         = document.querySelector('[data-js="toast"]');
   const toastText     = document.querySelector('[data-js="toast-text"]');
-  const modal         = document.querySelector('[data-js="modal"]');
-  const modalName     = document.querySelector('[data-js="modal-name"]');
-  const modalCalories = document.querySelector('[data-js="modal-calories"]');
-  const modalSave     = document.querySelector('[data-js="modal-save"]');
-  const modalEmojiBt  = document.querySelector('[data-js="modal-emoji-btn"]');
-  const emojiModal    = document.querySelector('[data-js="emoji-modal"]');
-  const emojiGrid     = document.querySelector('[data-js="emoji-grid"]');
+  const overlay       = document.querySelector('[data-js="overlay"]');
+  const overlayGrid   = document.querySelector('[data-js="overlay-grid"]');
+  const overlayCreate = document.querySelector('[data-js="overlay-create-btn"]');
 
   // ── Helpers ────────────────────────────────────────────────────
   function today() {
@@ -318,12 +251,12 @@
     return todayLogs.reduce((s, l) => s + l.kcal, 0);
   }
 
-  function saveLogs()   { localStorage.setItem('logs_' + today(), JSON.stringify(todayLogs)); }
-  function savePresets(){ localStorage.setItem('presets', JSON.stringify(presets)); }
+  function saveLogs() {
+    localStorage.setItem('logs_' + today(), JSON.stringify(todayLogs));
+  }
 
   function formatTime(ts) {
-    const d = new Date(ts);
-    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   }
 
   // ── Widget update ──────────────────────────────────────────────
@@ -337,17 +270,16 @@
     kcalRemaining.textContent = rem.toLocaleString('ru');
     progressFill.style.width  = pct + '%';
 
-    const fill = progressFill;
-    fill.classList.remove('bg-orange', 'bg-green', 'bg-red-400');
+    progressFill.classList.remove('bg-orange', 'bg-green', 'bg-red-400');
     if (e === 0) {
-      fill.classList.add('bg-orange');
+      progressFill.classList.add('bg-orange');
       statusLabel.textContent = '';
     } else if (rem >= 0) {
-      fill.classList.add('bg-green');
+      progressFill.classList.add('bg-green');
       statusLabel.textContent = `Отлично — осталось ${rem.toLocaleString('ru')} ккал 🎯`;
       statusLabel.style.color = '#27AE60';
     } else {
-      fill.classList.add('bg-red-400');
+      progressFill.classList.add('bg-red-400');
       statusLabel.textContent = `Перебор на ${Math.abs(rem).toLocaleString('ru')} ккал 😬`;
       statusLabel.style.color = '#E74C3C';
     }
@@ -362,23 +294,32 @@
     }
     logSection.classList.remove('hidden');
 
-    // Show in reverse chronological order
     [...todayLogs].reverse().forEach((entry, revIdx) => {
       const realIdx = todayLogs.length - 1 - revIdx;
       const item = document.createElement('div');
       item.className = 'log-item bg-white rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform';
       item.dataset.idx = realIdx;
       item.onclick = () => toggleDeleteBtn(item);
+
+      // Show photo if present, otherwise emoji
+      const icon = entry.photo
+        ? `<img src="${entry.photo}" alt="" class="w-10 h-10 rounded-xl object-cover shrink-0"/>`
+        : `<span class="text-[22px] w-10 text-center shrink-0">${entry.emoji || '🍽️'}</span>`;
+
       item.innerHTML = `
-        <span class="text-[22px] shrink-0">${entry.emoji || '🍽️'}</span>
+        ${icon}
         <div class="flex-1 min-w-0">
           <p class="font-roboto text-[14px] font-medium text-[#18180F] truncate">${entry.name}</p>
           <p class="font-roboto text-[12px] text-[#8C8C85] font-light">${formatTime(entry.time)}</p>
         </div>
         <span class="font-anton text-[15px] text-orange shrink-0">${entry.kcal} ккал</span>
-        <button class="delete-btn w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0" onclick="deleteLog(event, ${realIdx})">
+        <button class="delete-btn w-8 h-8 rounded-full bg-red-50 flex items-center justify-center shrink-0"
+                onclick="deleteLog(event, ${realIdx})">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="#E74C3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1V6"/>
+            <polyline points="3,6 5,6 21,6"/>
+            <path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/>
+            <path d="M10,11v6"/><path d="M14,11v6"/>
+            <path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1V6"/>
           </svg>
         </button>`;
       logList.appendChild(item);
@@ -386,7 +327,6 @@
   }
 
   function toggleDeleteBtn(item) {
-    // Close all others
     document.querySelectorAll('.log-item.reveal-delete').forEach(el => {
       if (el !== item) el.classList.remove('reveal-delete');
     });
@@ -402,58 +342,26 @@
     if (navigator.vibrate) navigator.vibrate(10);
   }
 
-  // ── Preset grid ────────────────────────────────────────────────
-  function renderGrid() {
-    const filtered = activeTab === 'all'
-      ? presets
-      : presets.filter(p => p.cat === activeTab);
-
-    presetGrid.innerHTML = '';
-
-    filtered.forEach((p, i) => {
-      const realIdx = presets.indexOf(p);
-      const card = document.createElement('button');
-      card.className = 'preset-card bg-white rounded-[18px] p-3 flex flex-col items-center gap-2 shadow-sm cursor-pointer';
-      card.onclick = () => logPreset(realIdx);
-      card.innerHTML = `
-        <div class="w-full aspect-square rounded-[12px] bg-orange-bg flex items-center justify-center overflow-hidden text-[30px]">
-          ${p.photo
-            ? `<img src="${p.photo}" alt="" class="w-full h-full object-cover"/>`
-            : (p.emoji || '🍽️')
-          }
-        </div>
-        <div class="w-full">
-          <p class="font-roboto text-[12px] font-medium text-[#18180F] truncate leading-tight">${p.name}</p>
-          <p class="font-anton text-[15px] text-orange leading-tight">${p.kcal} ккал</p>
-        </div>`;
-      presetGrid.appendChild(card);
-    });
-
-    // Add button only when zero presets exist
-    if (presets.length === 0) {
-      const addBtn = document.createElement('button');
-      addBtn.className = 'col-span-3 preset-card bg-white rounded-[18px] p-5 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-[#E0E0DC] cursor-pointer';
-      addBtn.onclick = () => window.location.href = 'presets.html';
-      addBtn.innerHTML = `
-        <div class="w-14 h-14 rounded-[14px] bg-[#F5F5F2] flex items-center justify-center">
-          <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="#BBBBB5" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
-        <p class="font-roboto text-[13px] text-[#8C8C85] text-center leading-snug">Добавь свой первый пресет</p>`;
-      presetGrid.appendChild(addBtn);
-    }
-  }
-
   // ── Log preset ─────────────────────────────────────────────────
+  /**
+   * Saves preset to today's log, including photo for display in log list.
+   * @param {number} idx - index in presets array
+   */
   function logPreset(idx) {
     const p = presets[idx];
-    todayLogs.push({ kcal: p.kcal, name: p.name, emoji: p.emoji || '🍽️', time: Date.now() });
+    todayLogs.push({
+      kcal:  p.kcal,
+      name:  p.name,
+      emoji: p.emoji || '🍽️',
+      photo: p.photo || null,   // fix: was missing
+      time:  Date.now(),
+    });
     lastLog = { logIdx: todayLogs.length - 1, kcal: p.kcal };
     saveLogs();
     updateWidget();
     renderLog();
-    scheduleEveningReminder(); // update SW with fresh lastLogTime
+    scheduleEveningReminder();
 
-    // Punch animation on number
     kcalRemaining.classList.remove('punch');
     void kcalRemaining.offsetWidth;
     kcalRemaining.classList.add('punch');
@@ -481,107 +389,107 @@
     toast.classList.add('toast-in');
     toastTimer = setTimeout(hideToast, 4000);
   }
+
   function hideToast() {
     toast.classList.remove('toast-in');
     toast.classList.add('toast-out');
     setTimeout(() => toast.classList.add('hidden'), 250);
   }
 
-  // ── Tabs ───────────────────────────────────────────────────────
-  function switchTab(btn) {
-    document.querySelectorAll('[data-js="tabs"] .tab').forEach(t => {
+  // ── Overlay ────────────────────────────────────────────────────
+  function openOverlay() {
+    // Refresh presets in case user added some in another tab
+    presets = JSON.parse(localStorage.getItem('presets') || '[]');
+    overlay.classList.remove('hidden', 'overlay-out');
+    overlay.classList.add('overlay-in');
+    renderOverlayGrid();
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+
+  function closeOverlay() {
+    overlay.classList.remove('overlay-in');
+    overlay.classList.add('overlay-out');
+    setTimeout(() => overlay.classList.add('hidden'), 280);
+  }
+
+  function switchOverlayTab(btn) {
+    document.querySelectorAll('[data-js="overlay-tabs"] .overlay-tab').forEach(t => {
       t.classList.remove('text-orange', 'bg-orange-bg');
       t.classList.add('text-[#8C8C85]');
     });
     btn.classList.remove('text-[#8C8C85]');
     btn.classList.add('text-orange', 'bg-orange-bg');
-    activeTab = btn.dataset.tab;
-    renderGrid();
+    overlayTab = btn.dataset.tab;
+    renderOverlayGrid();
   }
 
-  // ── Add preset modal ───────────────────────────────────────────
-  let modalCat = 'breakfast';
+  function renderOverlayGrid() {
+    overlayGrid.innerHTML = '';
 
-  function openModal() {
-    selectedEmoji = '🍽️';
-    modalEmojiBt.textContent = selectedEmoji;
-    modalName.value = '';
-    modalCalories.value = '';
-    modalSave.disabled = true;
-    // Reset category
-    document.querySelectorAll('.cat-btn').forEach(b => {
-      b.classList.remove('selected','border-orange','bg-orange-bg','text-orange');
-      b.classList.add('border-[#E8E8E3]','text-[#8C8C85]');
-    });
-    const first = document.querySelector('.cat-btn');
-    first.classList.add('selected','border-orange','bg-orange-bg','text-orange');
-    first.classList.remove('border-[#E8E8E3]','text-[#8C8C85]');
-    modalCat = first.dataset.cat;
-    modal.classList.remove('hidden');
-  }
+    if (presets.length === 0) {
+      // Empty state — full width
+      overlayCreate.classList.add('hidden');
+      overlayGrid.style.gridTemplateColumns = '1fr';
 
-  function closeModal() { modal.classList.add('hidden'); }
-
-  function pickCat(btn) {
-    document.querySelectorAll('.cat-btn').forEach(b => {
-      b.classList.remove('selected','border-orange','bg-orange-bg','text-orange');
-      b.classList.add('border-[#E8E8E3]','text-[#8C8C85]');
-    });
-    btn.classList.add('selected','border-orange','bg-orange-bg','text-orange');
-    btn.classList.remove('border-[#E8E8E3]','text-[#8C8C85]');
-    modalCat = btn.dataset.cat;
-  }
-
-  function validateModal() {
-    const hasName = modalName.value.trim().length > 0;
-    const kcal    = parseInt(modalCalories.value);
-    modalSave.disabled = !(hasName && kcal > 0);
-  }
-
-  modalName.addEventListener('input', validateModal);
-  modalCalories.addEventListener('input', validateModal);
-
-  function savePreset() {
-    const name = modalName.value.trim();
-    const kcal = parseInt(modalCalories.value);
-    if (!name || !kcal) return;
-    presets.push({ name, kcal, cat: modalCat, emoji: selectedEmoji });
-    savePresets();
-    closeModal();
-    renderGrid();
-    if (navigator.vibrate) navigator.vibrate(10);
-  }
-
-  // ── Emoji picker ───────────────────────────────────────────────
-  function openEmojiPicker() {
-    // Build grid if empty
-    if (emojiGrid.children.length === 0) {
-      FOOD_EMOJIS.forEach(em => {
-        const btn = document.createElement('button');
-        btn.className = 'emoji-btn w-10 h-10 rounded-xl text-[24px] flex items-center justify-center';
-        btn.textContent = em;
-        if (em === selectedEmoji) btn.classList.add('selected');
-        btn.onclick = () => pickEmoji(em, btn);
-        emojiGrid.appendChild(btn);
-      });
+      const empty = document.createElement('div');
+      empty.className = 'flex flex-col items-center justify-center py-20 gap-6';
+      empty.innerHTML = `
+        <span style="font-size:64px; line-height:1">🍽️</span>
+        <div class="text-center">
+          <p class="font-anton text-[22px] text-[#18180F] mb-2">Нет пресетов</p>
+          <p class="font-roboto text-[14px] text-[#8C8C85] font-light leading-relaxed">
+            Создай свои любимые блюда,<br>чтобы быстро их добавлять
+          </p>
+        </div>
+        <button onclick="window.location.href='presets.html'"
+          class="px-8 h-14 rounded-2xl bg-orange font-anton text-[16px] tracking-wide text-white active:scale-95 transition-transform shadow-lg">
+          Добавить первый пресет
+        </button>`;
+      overlayGrid.appendChild(empty);
+      return;
     }
-    emojiModal.classList.remove('hidden');
+
+    // Has presets — show "+ Создать пресет" in header
+    overlayCreate.classList.remove('hidden');
+    overlayGrid.style.gridTemplateColumns = '';
+
+    const filtered = overlayTab === 'all'
+      ? presets
+      : presets.filter(p => p.cat === overlayTab);
+
+    filtered.forEach(p => {
+      const realIdx = presets.indexOf(p);
+      const card = document.createElement('button');
+      card.className = 'preset-card bg-white rounded-[18px] p-3 flex flex-col items-center gap-2 shadow-sm';
+      card.onclick = () => {
+        logPreset(realIdx);
+        closeOverlay();
+      };
+      card.innerHTML = `
+        <div class="w-full aspect-square rounded-[12px] bg-orange-bg flex items-center justify-center overflow-hidden text-[30px]">
+          ${p.photo
+            ? `<img src="${p.photo}" alt="" class="w-full h-full object-cover"/>`
+            : (p.emoji || '🍽️')
+          }
+        </div>
+        <div class="w-full">
+          <p class="font-roboto text-[12px] font-medium text-[#18180F] truncate leading-tight">${p.name}</p>
+          <p class="font-anton text-[15px] text-orange leading-tight">${p.kcal} ккал</p>
+        </div>`;
+      overlayGrid.appendChild(card);
+    });
+
+    // No items for this category
+    if (filtered.length === 0) {
+      overlayGrid.style.gridTemplateColumns = '1fr';
+      const msg = document.createElement('div');
+      msg.className = 'col-span-3 py-16 flex flex-col items-center gap-3 text-center';
+      msg.innerHTML = `
+        <span style="font-size:40px">🤷</span>
+        <p class="font-roboto text-[14px] text-[#8C8C85]">В этой категории пусто</p>`;
+      overlayGrid.appendChild(msg);
+    }
   }
-
-  function closeEmojiPicker() { emojiModal.classList.add('hidden'); }
-
-  function pickEmoji(em, btn) {
-    selectedEmoji = em;
-    modalEmojiBt.textContent = em;
-    // Update selected state in grid
-    emojiGrid.querySelectorAll('.emoji-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    if (navigator.vibrate) navigator.vibrate(8);
-    setTimeout(closeEmojiPicker, 150);
-  }
-
-  // ── Settings stub ──────────────────────────────────────────────
-  function openSettings() { alert('Settings — следующий экран'); }
 
   // ── Date header ────────────────────────────────────────────────
   function setDateHeader() {
@@ -590,87 +498,65 @@
       d.toLocaleDateString('ru-RU', { weekday:'long', day:'numeric', month:'long' });
   }
 
-  // ── Notifications ─────────────────────────────────────────────
-  /**
-   * Ask for notification permission at the right moment —
-   * only after user has logged at least one preset (felt the value).
-   * Schedule daily 20:00 reminder via service worker message.
-   */
+  // ── Notifications ──────────────────────────────────────────────
   function initNotifications() {
     if (!('Notification' in window) || !navigator.serviceWorker) return;
-
-    // Request permission only if user has logged something today
     if (todayLogs.length > 0 && Notification.permission === 'default') {
-      // Small delay so it doesn't feel abrupt right after logging
       setTimeout(() => {
         Notification.requestPermission().then(perm => {
           if (perm === 'granted') scheduleEveningReminder();
         });
       }, 2000);
     }
-
-    // If already granted — schedule every time app opens
     if (Notification.permission === 'granted') {
       scheduleEveningReminder();
     }
   }
 
   /**
-   * Send schedule message to service worker.
-   * SW will fire notification at 20:00 only if nothing logged after 17:00.
+   * Sends schedule message to SW to fire a notification at 20:00
+   * only if user hasn't logged anything after 17:00.
    */
   function scheduleEveningReminder() {
     if (!navigator.serviceWorker.controller) return;
-
     const now    = new Date();
     const target = new Date();
-    target.setHours(20, 0, 0, 0); // 20:00 today
-
-    // If already past 20:00 — skip until tomorrow
+    target.setHours(20, 0, 0, 0);
     if (now >= target) return;
 
-    const msUntil8pm = target.getTime() - now.getTime();
-
-    // Find last log time today
     const lastLogTime = todayLogs.length > 0
       ? Math.max(...todayLogs.map(l => l.time))
       : 0;
 
     navigator.serviceWorker.controller.postMessage({
       type:        'SCHEDULE_NOTIFICATION',
-      msUntil8pm,
+      msUntil8pm:  target.getTime() - now.getTime(),
       lastLogTime,
       remaining:   Math.max(0, DAILY - eaten()),
       todayKey:    'logs_' + today(),
     });
   }
 
-  // Init notifications after first render
-  initNotifications();
-
   // ── Init ───────────────────────────────────────────────────────
   setDateHeader();
   updateWidget();
   renderLog();
-  renderGrid();
+  initNotifications();
 
-  // Re-read presets/logs from localStorage when page becomes visible
-  // (handles bfcache restore when navigating back from presets.html)
+  // Refresh state on page restore (back navigation from presets.html etc.)
   window.addEventListener('pageshow', () => {
-    presets   = JSON.parse(localStorage.getItem('presets')          || '[]');
-    todayLogs = JSON.parse(localStorage.getItem('logs_' + today())  || '[]');
+    presets   = JSON.parse(localStorage.getItem('presets')         || '[]');
+    todayLogs = JSON.parse(localStorage.getItem('logs_' + today()) || '[]');
     updateWidget();
     renderLog();
-    renderGrid();
   });
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
-    presets   = JSON.parse(localStorage.getItem('presets')          || '[]');
-    todayLogs = JSON.parse(localStorage.getItem('logs_' + today())  || '[]');
+    presets   = JSON.parse(localStorage.getItem('presets')         || '[]');
+    todayLogs = JSON.parse(localStorage.getItem('logs_' + today()) || '[]');
     updateWidget();
     renderLog();
-    renderGrid();
   });
 </script>
 </body>
